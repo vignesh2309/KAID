@@ -112,31 +112,33 @@ Uncertainty is an enterprise bootstrap with 2,000 replicates. Each replicate dra
 
 The holdout is used here for the first time. Table 1 compares the four scores on discrimination, calibration, and a frozen F1 cut. Table 2 tests the paired differences. Figure 1 then shows what those scores do as a budget screen, and Figure 2 shows why the blended curve does not separate from boosting.
 
-Table 1 is the holdout comparison. Logistic regression reaches AUC 0.873 (95% interval 0.860–0.887). The six-rule knowledge layer reaches 0.854 (0.840–0.867). Gradient boosting reaches 0.891 (0.879–0.903). KAID reaches 0.891 (0.878–0.903). The Brier score moves in the same direction: 0.120, 0.125, 0.110, and 0.110. Mean predicted probability on the holdout is 0.237 for boosting and 0.237 for KAID, against a ready rate of 0.233, so the probabilities sit on the scale of the outcome. The Prioritize cut of 0.50 is therefore a high bar relative to the base rate, not a cut that merely recovers the sample prevalence.
+Table 1 is that comparison, taken from the holdout scores. Logistic regression reaches AUC 0.8734 (95% interval 0.8596–0.8868). The six-rule knowledge layer reaches 0.8536 (0.8399–0.8675). Gradient boosting reaches 0.8914 (0.8787–0.9033). KAID reaches 0.8912 (0.8784–0.9032). To three decimal places the last two are both 0.891, which is the figure used in the abstract. The Brier score moves with the AUC: 0.120, 0.125, 0.110, and 0.110. Mean predicted probability on the holdout is 0.237 for boosting and 0.237 for KAID, against a ready rate of 0.233, so the probabilities sit on the scale of the outcome. The Prioritize cut of 0.50 is therefore a high bar relative to the base rate, not a cut that merely recovers the sample prevalence.
+
+F1, precision, and recall are not a second ranking of the same operating point. Each score has its own cut, chosen on the training out-of-fold scores and then frozen. Those cuts are 0.200, 0.225, 0.300, and 0.350. KAID and the AI layer both have F1 0.678, but KAID’s higher cut raises precision from 0.565 to 0.584 and lowers recall from 0.848 to 0.808. AUC and the Brier score do not use the cuts.
 
 Table 1. Holdout comparison of readiness scores.
 
-| Method | AUC | 95% interval | F1 | Precision | Recall | Brier |
-|---|---:|---:|---:|---:|---:|---:|
-| Logistic regression | 0.873 | 0.860–0.887 | 0.660 | 0.539 | 0.851 | 0.120 |
-| Knowledge layer | 0.854 | 0.840–0.867 | 0.626 | 0.502 | 0.833 | 0.125 |
-| AI layer | 0.891 | 0.879–0.903 | 0.678 | 0.565 | 0.848 | 0.110 |
-| KAID | 0.891 | 0.878–0.903 | 0.678 | 0.584 | 0.808 | 0.110 |
+| Method | AUC | 95% interval | F1 cut | F1 | Precision | Recall | Brier |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Logistic regression | 0.8734 | 0.8596–0.8868 | 0.200 | 0.660 | 0.539 | 0.851 | 0.120 |
+| Knowledge layer | 0.8536 | 0.8399–0.8675 | 0.225 | 0.626 | 0.502 | 0.833 | 0.125 |
+| AI layer | 0.8914 | 0.8787–0.9033 | 0.300 | 0.678 | 0.565 | 0.848 | 0.110 |
+| KAID | 0.8912 | 0.8784–0.9032 | 0.350 | 0.678 | 0.584 | 0.808 | 0.110 |
 
-Lower Brier is better. The 95% intervals are enterprise bootstraps.
+Note. Holdout of 2,932 firm-years from 2,414 enterprises; ready rate 23.3%. AUC is the area under the receiver-operating curve. Each 95% interval is the 2.5th to 97.5th percentile of 2,000 enterprise-bootstrap replicates of the fixed holdout scores (seed 42). The models are not refit inside a replicate. The F1 cut was chosen on training out-of-fold scores to maximize F1 and then frozen. F1, precision, and recall use that cut. AUC and Brier do not. Lower Brier is better. AUC is shown to four decimal places: subtracting these point estimates recovers the differences in Table 2. The abstract rounds the same AUCs to three decimal places, and it rounds the contrasts 0.0378 and 0.0180 to 0.038 and 0.018.
 
-Table 2 states the paired contrasts. Boosting exceeds the knowledge layer by 0.038 AUC (0.029 to 0.046). It exceeds logistic regression by 0.018 (0.012 to 0.025). Both intervals exclude zero, and no bootstrap replicate reverses the sign (p < 0.001). The knowledge layer does not beat the linear model. Logistic regression exceeds it by 0.020 AUC (0.011 to 0.028; p < 0.001). The training step sets the KAID weight at w = 0.95. The blended score is 0.0002 AUC below boosting. The interval runs from −0.0006 to 0.0001 and includes zero (p = 0.223). KAID does not predict better than the AI layer.
+Table 2 states the paired contrasts on those same scores. Boosting exceeds the knowledge layer by 0.0378 AUC (0.0291 to 0.0461). It exceeds logistic regression by 0.0180 (0.0117 to 0.0247). Both intervals exclude zero, and no bootstrap replicate reverses the sign (p < 0.001). The knowledge layer does not beat the linear model. Logistic regression exceeds it by 0.0198 AUC (0.0114 to 0.0279; p < 0.001). The training step sets the KAID weight at w = 0.95. The blended score is 0.0002 AUC below boosting. The interval runs from −0.0006 to 0.0001 and includes zero (p = 0.223). KAID does not predict better than the AI layer.
 
 Table 2. Paired enterprise-bootstrap contrasts on holdout AUC.
 
 | Contrast | Difference in AUC | 95% interval | p |
 |---|---:|---:|---:|
-| AI − knowledge | +0.038 | 0.029 to 0.046 | < 0.001 |
-| AI − logistic | +0.018 | 0.012 to 0.025 | < 0.001 |
-| Knowledge − logistic | −0.020 | −0.028 to −0.011 | < 0.001 |
-| KAID − AI | −0.0002 | −0.0006 to 0.0001 | 0.223 |
+| AI layer − knowledge layer | +0.0378 | 0.0291 to 0.0461 | < 0.001 |
+| AI layer − logistic regression | +0.0180 | 0.0117 to 0.0247 | < 0.001 |
+| Knowledge layer − logistic regression | −0.0198 | −0.0279 to −0.0114 | < 0.001 |
+| KAID − AI layer | −0.0002 | −0.0006 to 0.0001 | 0.223 |
 
-Two thousand replicates. A negative difference means the first method is worse.
+Note. Each difference is the first method’s holdout AUC minus the second, on the same 2,932 firm-years, computed before rounding. The interval is the percentile interval of that paired difference across the same 2,000 enterprise draws (seed 42). All 2,000 replicates were retained. The two-sided p-value is twice the smaller tail, counting a replicate at zero in both tails, and is capped at 1. Where no replicate changed sign, p is reported as < 0.001. A negative difference means the first method has the lower AUC. The stored p-value for KAID − AI layer is 0.223.
 
 ![Holdout decision bands](figures/figure1_decision.png)
 
@@ -154,7 +156,7 @@ Figure 2 shows the same paired result as overlapping curves. Process innovation 
 
 Section 3 ranked the scores. The reason to keep the rules is not that ranking. A manager who receives only an AUC still does not know which routine the next budget would have to supply, which is the decision the introduction set out to support.
 
-The holdout separates two questions that the cited literature often keeps together. The first is which score carries the probability. A linear reading of the innovation survey already reaches AUC 0.873. Six explicit routines are a readable compression of that record, and they lose to the linear model by 0.020 AUC. Boosting adds a further 0.018 over logistic regression. Blending the knowledge probability back in, at the training weight w = 0.95, does not improve on boosting (p = 0.223). That negative result qualifies the second contribution. Coupling the layers was worth testing because reviews treat an artificial-intelligence output as an input to the innovation process rather than as a substitute for it (Haefner et al., 2021; Mariani et al., 2023; Sjödin et al., 2021). The organizational consequence those reviews ask for is not, on this holdout, a higher score (Dwivedi et al., 2021). A reader who wants only a probability can stop at the AI layer.
+The holdout separates two questions that the cited literature often keeps together. The first is which score carries the probability. A linear reading of the innovation survey already reaches AUC 0.8734. Six explicit routines are a readable compression of that record, and they lose to the linear model by 0.0198 AUC. Boosting adds a further 0.0180 over logistic regression. Blending the knowledge probability back in, at the training weight w = 0.95, does not improve on boosting (p = 0.223). That negative result qualifies the second contribution. Coupling the layers was worth testing because reviews treat an artificial-intelligence output as an input to the innovation process rather than as a substitute for it (Haefner et al., 2021; Mariani et al., 2023; Sjödin et al., 2021). The organizational consequence those reviews ask for is not, on this holdout, a higher score (Dwivedi et al., 2021). A reader who wants only a probability can stop at the AI layer.
 
 The second question is what the rules add once the probability is known. Capability studies locate performance in dynamic, operational, entrepreneurial, or analytics-management capabilities rather than in the data stock alone (Ciampi et al., 2021; Fosso Wamba et al., 2017; Mikalef et al., 2020; Song et al., 2024; Wu et al., 2024). This paper does not estimate those mediators. What it can show is the routine the band is missing. In Figure 1, panel (a), Hold is separated from Prioritize by process innovation, Develop by training, and Prioritize still lacks knowledge creation in 48.0% of firm-years. Those three objects sit next to the product, process, and business-model innovation that the digital-transformation literature treats as the content of the change (Bresciani et al., 2021; Frank et al., 2019; Liang & Li, 2024; Paiola & Gebauer, 2020). The holdout does not show that installing the named routine causes readiness. It shows which common routine is absent where the score is low, and which one is still absent where the score is high. About half of Prioritize firm-years still need a place where knowledge is created and kept (Grant, 1996).
 
