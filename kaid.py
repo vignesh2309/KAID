@@ -406,8 +406,8 @@ def plot_decision(path: Path, frame: pd.DataFrame, assigned: list[str], band_row
     ax.set_xticks(xs)
     ax.set_xticklabels(bands)
     ax.set_ylim(0, 1.05)
-    ax.set_ylabel("Share actually ready")
-    ax.set_title("(b)  Realized readiness (95% bootstrap interval)", loc="left", fontsize=11, color="#102A43", pad=18)
+    ax.set_ylabel("Share of firm-years coded ready")
+    ax.set_title("(b)  Realized readiness, with a 95% interval", loc="left", fontsize=11, color="#102A43", pad=18)
     ax.legend(frameon=False, loc="upper left")
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda value, _pos: f"{int(value * 100)}%"))
     ax.grid(axis="y", color="#E4E7EB", zorder=0)
@@ -418,26 +418,34 @@ def plot_decision(path: Path, frame: pd.DataFrame, assigned: list[str], band_row
 
 
 def plot_roc(path: Path, target: np.ndarray, curves: dict[str, np.ndarray]) -> None:
-    fig, ax = plt.subplots(figsize=(6.8, 5.8))
+    fig, ax = plt.subplots(figsize=(6.6, 6.2))
     fig.patch.set_facecolor("white")
     style = {
-        "Logistic regression": ("#7B8794", "-", 1.8),
-        "Knowledge layer": ("#3D5A80", "-", 2.0),
-        "AI layer": ("#E07A3D", "-", 2.3),
-        "KAID": ("#1F7A4D", "--", 2.3),
+        "Logistic regression": dict(color="#7B8794", linestyle="-", lw=1.8),
+        "Knowledge layer": dict(color="#3D5A80", linestyle="-", lw=2.0),
+        "AI layer": dict(color="#E07A3D", linestyle="-", lw=2.4),
+        "KAID": dict(
+            color="#1F7A4D",
+            linestyle="--",
+            lw=1.6,
+            marker="o",
+            markevery=0.07,
+            markersize=4.5,
+            markerfacecolor="white",
+            markeredgewidth=1.1,
+            zorder=5,
+        ),
     }
     for name, probability in curves.items():
         fpr, tpr, _thresholds = roc_curve(target, probability)
         auc = roc_auc_score(target, probability)
-        color, linestyle, width = style[name]
-        ax.plot(fpr, tpr, color=color, linestyle=linestyle, lw=width, label=f"{name}   AUC {auc:.3f}")
+        ax.plot(fpr, tpr, label=f"{name}   AUC {auc:.3f}", **style[name])
     ax.plot([0, 1], [0, 1], color="#9AA5B1", lw=1, linestyle=":", label="Chance   AUC 0.500")
     ax.set_xlabel("False positive rate")
     ax.set_ylabel("True positive rate")
     ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
+    ax.set_ylim(0, 1.02)
     ax.set_aspect("equal", adjustable="box")
-    ax.set_title("Holdout discrimination", loc="left", fontsize=12, color="#102A43")
     ax.legend(frameon=False, loc="lower right", fontsize=8.5)
     ax.grid(color="#E4E7EB")
     _style(ax)

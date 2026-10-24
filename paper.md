@@ -26,11 +26,13 @@ Digital transformation is a change in how a firm creates value, not a purchase o
 
 The knowledge-based view treats the firm as an institution that integrates specialist knowledge into a routine that can be used (Grant, 1996; Kogut & Zander, 1992). An artificial-intelligence output is another specialist product. Reviews of artificial intelligence in innovation management treat the model as an input to the innovation process (Haefner et al., 2021; Mariani et al., 2023), and the conversion of an AI capability into a business model is described as a co-evolutionary process (Sjödin et al., 2021). The output changes what the firm sells only when the surrounding routines can carry it (Foss & Saebi, 2017; Teece, 2010). Case and review work describes digital transformation itself as a continuing renewal of dynamic capabilities (Schneider et al., 2024; Warner & Wäger, 2019; Wohlleber et al., 2024). Readiness for that renewal is discussed as a multidimensional state, covering technological resources, business processes, management capability, human capability, and culture, and it is not settled by a single technology indicator (Michelotto & Joia, 2024). The same literature links transformation to the balance of exploitative and exploratory innovation (Liang & Li, 2024) and frames it as a springboard for product, process, and business-model innovation, including servitization of a product firm (Bresciani et al., 2021; Frank et al., 2019; Paiola & Gebauer, 2020). Field maps of that joint literature are already large (Gao et al., 2022; Kraus et al., 2022). A multidisciplinary agenda for artificial intelligence asks for organizational consequences, not only for a higher score (Dwivedi et al., 2021), and adoption studies in manufacturing locate take-up in technological, organizational, and environmental conditions (Chatterjee et al., 2021).
 
-Those studies do not, however, answer the managerial question that follows from them. A definition, a capability path, or a readiness framework does not tell a manager whether this firm, with this innovation record, should spend the next budget on a digital product. None of the studies cited above reports a holdout in which the digital markers are the label only, a transparent rule score is compared with logistic regression and gradient boosting on enterprises that do not cross the split, and each probability band is tied to the innovation routine that separates it. That comparison is the opening this Short Communication fills. Whether the rule score, the boosting score, or a blend of the two is the better probability is left to the holdout. It is not assumed.
+The stake is the next budget. A firm can add a website, a systems department, or a software line and still have no routine that carries a new offer. Counting those markers again as predictors would only rediscover the purchase. The studies cited above map the transformation, the capability path, or the readiness construct. None of them reports the comparison a budget decision needs: a holdout in which the digital markers are the label only, a transparent rule score is set against logistic regression and gradient boosting on enterprises that do not cross the split, and each probability band names the innovation routine that separates it. That comparison is the opening this Short Communication fills. Section 2 defines the label, the rules, and the scores. Section 3 asks which score carries the probability. Section 4 asks what a manager should do once that ranking is known. Whether the rule score, the boosting score, or a blend of the two is better is left to the holdout.
 
 This paper proposes KAID, a knowledge-based AI decision-support model for that comparison. Unlike a classifier that stops at a probability, KAID keeps the routines visible and ties each decision band to the routine that separates it from firms judged ready to proceed. The contribution is threefold, and each part is bounded by the test. First, a readiness label is constructed only from digital markers, so the innovation predictors are not scored against themselves. Second, an explicit six-rule knowledge layer is coupled to gradient boosting, with the coupling weight chosen on training data and then frozen. Third, an enterprise-level holdout reports a linear baseline, bootstrap intervals, and paired contrasts, so a claim that one layer adds something can be checked. The originality is that separation of roles. Section 3 asks which score carries the probability. Section 4 asks what the rules add once that question is answered. Averaging the two scores is not treated as a third contribution unless the holdout shows a gain.
 
 ## 2. Methodology
+
+The design follows the gap in Section 1. The label is built only from digital markers, so the innovation record is not scored against itself. The knowledge layer stays a short list of routines a manager can read. The weight that blends that list with the boosting probability is chosen on training enterprises and then frozen, so the holdout can reject the blend.
 
 ### 2.1 Readiness label
 
@@ -46,19 +48,19 @@ Firm-years with fewer than three observed markers are excluded, because the labe
 
 The knowledge layer is a production-rule base R = {r1, …, r6}, evaluated once per firm-year. A rule fires when any of its observed survey items equals 1. If every item for that rule is missing, the rule is missing and is left out of the share. The six rules, in the order used by the code, are knowledge creation (in-house R&D expenditure or a formal R&D department), external knowledge (external R&D expenditure), training for innovation, organizational integration (organizational innovation), product innovation, and process innovation. Innovation items follow the Oslo Manual (OECD/Eurostat, 2018).
 
-The raw knowledge score is the share of observed rules that fire, given by Eq. (2),
+Let f_{ir} equal 1 when rule r fires for firm-year i and 0 when the rule is observed and does not fire. Let R_i be the set of rules with at least one observed item. In this estimation sample every retained firm-year has all six rules observed, so |R_i| = 6 throughout. The raw knowledge score is the share of those rules that fire, given by Eq. (2),
 
 $$
-S_i^{0} = \frac{1}{|R_i|}\sum_{r \in R_i} r_i, \quad (2)
+S_i^{0} = \frac{1}{|R_i|}\sum_{r \in R_i} f_{ir}, \quad (2)
 $$
 
-and a training-only isotonic map g(·) converts that share into a probability S_i = g(S_i^0). The map is fit on training enterprises and applied unchanged to the holdout. External R&D fires for only 6.0% of the estimation sample, so it is retained as a rule and is not used as the routine a band most often lacks: a rare rule is absent in every band and would dominate that comparison for a mechanical reason.
+and a training-only isotonic map g(·) converts that share into a probability S_i = g(S_i^0). The map is an isotonic regression of the readiness label on S^0, clipped to the unit interval. It is fit on training enterprises and applied unchanged to the holdout. External R&D fires for only 6.0% of the estimation sample, so it is retained as a rule and is not used as the routine a band most often lacks: a rare rule is absent in every band and would dominate that comparison for a mechanical reason.
 
 Two candidate rules were specified and then removed from the main model. Innovation cooperation was not asked of 39% of estimation-sample firms, and the internet as an information source was not asked of 51%. Among firms who were not asked about cooperation, 0.1% were coded ready. Among firms who were not asked about the internet, 2.8% were coded ready. Using those gaps would have scored the questionnaire. Section 3 reports what cooperation adds on the subset where the question was fielded.
 
 ### 2.3 AI layer and the decision score
 
-The AI layer is histogram gradient boosting (Friedman, 2001) on the survey items inside the six rules, plus marketing innovation, foreign ownership, group membership, log employment, country, year, and sector. Missing answers on items that were asked of nearly every firm stay missing; the trees may use that missingness. Country, year, and sector are one-hot encoded from the training sample only.
+The AI layer is a histogram gradient booster in the gradient-boosting family (Friedman, 2001). Its inputs are the survey items inside the six rules, plus marketing innovation, foreign ownership, group membership, log(1 + employment), country, year, and sector. The fitted model uses trees of depth 4, a learning rate of 0.06, at most 400 iterations, an L2 penalty of 1.0, and at least 40 observations in a leaf. Early stopping holds out 15% of the rows inside the sample being fitted and stops after 20 rounds without improvement. That internal split is not the enterprise holdout, and it does not choose w. Missing numeric answers stay missing, so a tree may split on missingness for items that were asked of nearly every firm. Country, year, and sector are one-hot encoded from the rows of the current fit only. No class weight is applied. The probabilities are left on the scale of the outcome.
 
 Let P_i be the boosting probability. The KAID score is given by Eq. (3),
 
@@ -66,7 +68,7 @@ $$
 K_i = w P_i + (1 - w) S_i, \quad (3)
 $$
 
-where w is chosen on out-of-fold predictions inside the training sample to minimize the Brier score, then frozen. The holdout is not used to pick w. Firms are not classified by maximizing F1. They are placed with two cuts fixed before the holdout is opened. Let π be the training readiness rate. The band is given by Eq. (4):
+where w is chosen on out-of-fold predictions inside the training sample to minimize the Brier score, then frozen. The search is the grid {0, 0.05, …, 1}. The holdout is not used to pick w, and the band in Eq. (4) is a function of K_i, not of P_i alone. Firms are not classified by maximizing F1. They are placed with two cuts fixed before the holdout is opened. Let π be the training readiness rate. The band is given by Eq. (4):
 
 $$
 \text{band}(K_i) =
@@ -86,13 +88,13 @@ Output: band and the routine the band points to.
 
 1: Drop any firm-year with fewer than three observed digital markers, and set y_i by Eq. (1).
 2: Split enterprises, not firm-years, into training and holdout. No enterprise enters both.
-3: On training folds, fit the knowledge map g, the boosting model, and the weight w in Eq. (3).
-4: Refit g and the boosting model on all training enterprises. Freeze w.
+3: On five enterprise-grouped folds of the training sample, fit g and the boosting model. Choose w in Eq. (3) on those out-of-fold scores.
+4: Refit g and the boosting model on all training enterprises. Freeze w. The holdout is not used in steps 3 or 4.
 5: Score each holdout firm-year with Eq. (3) and assign the band in Eq. (4).
 6: Name the routine that separates that band from Prioritize, using only routines that fire for at least 15% of firms.
 7: Return the band, the score, and the named routine.
 
-Fixed seeds make the split, the boosting fit, and the bootstrap reproducible from the accompanying code.
+The holdout split, the boosting fit, the logistic fit, and the AUC bootstrap use seed 42. The band-rate bootstrap uses seed 43. The five training folds are deterministic given the enterprises. Running the accompanying code rebuilds every number in Section 3.
 
 ### 2.4 Data, sample, and evaluation
 
@@ -100,11 +102,15 @@ The source is the public Harmonized Latin American Innovation Surveys database, 
 
 Among retained firms the six routines fire at the following rates: knowledge creation 19.9%, external R&D 6.0%, training 21.3%, organizational innovation 27.9%, product innovation 32.0%, and process innovation 34.9%. A website, where asked, is reported by 50.5% of firms. An informatics department, where asked, is reported by 33.0%. Software, hardware, and ICT expenditure are reported by 18.5%, 16.7%, and 24.1%.
 
-The holdout is a group split of 20% of enterprises, seed 42. The training sample has 11,731 firm-years (9,656 enterprises). The holdout has 2,932 firm-years (2,414 enterprises) and a ready rate of 23.3%. Four scores are compared on that holdout: logistic regression with median imputation and standardized inputs; the knowledge layer; gradient boosting; and KAID. Classification thresholds used only for F1, precision, and recall are chosen on training out-of-fold scores to maximize F1. AUC and the Brier score do not use those thresholds.
+The holdout is a group split of 20% of enterprises, seed 42. An enterprise is the country code joined to the firm identifier, so a firm that appears in two survey years stays on one side of the split. The code stops if any enterprise is in both samples. The training sample has 11,731 firm-years (9,656 enterprises). The holdout has 2,932 firm-years (2,414 enterprises) and a ready rate of 23.3%. Four scores are compared on that holdout: logistic regression, the knowledge layer, gradient boosting, and KAID. The logistic baseline median-imputes numeric inputs, standardizes them, and fits an L2-penalized logistic regression with C = 1. That imputation is not used in the boosting layer. The same five enterprise-grouped training folds that choose w also supply the out-of-fold scores for the logistic baseline.
 
-Uncertainty is an enterprise bootstrap with 2,000 replicates and the same seed family as the split. Each replicate draws holdout enterprises with replacement and keeps every firm-year of a drawn enterprise. AUC intervals and paired AUC differences are computed on those replicates. A two-sided bootstrap p-value is twice the smaller share of replicates in which the difference is positive or negative. When no replicate changes sign, the reported result is p < 0.001. The same resampling gives the intervals on the band-specific ready rates in Section 3.
+Classification thresholds used only for F1, precision, and recall are chosen on those out-of-fold scores. The grid runs from 0.05 to 0.95 in steps of 0.025, and the cut with the highest training F1 is frozen. AUC and the Brier score do not use those thresholds. The decision bands do not use them either.
+
+Uncertainty is an enterprise bootstrap with 2,000 replicates. Each replicate draws holdout enterprises with replacement and keeps every firm-year of a drawn enterprise. AUC intervals and paired AUC differences use seed 42. Band-rate intervals use seed 43. A replicate that draws a single class is dropped. A two-sided bootstrap p-value is twice the smaller of the share of replicates in which the paired difference is at most zero and the share in which it is at least zero, and it is capped at 1. When no replicate changes sign, the reported result is p < 0.001. Section 3 opens with the probability comparison. The bands are read only after that comparison is on the table.
 
 ## 3. Results
+
+The holdout is used here for the first time. Table 1 compares the four scores on discrimination, calibration, and a frozen F1 cut. Table 2 tests the paired differences. Figure 1 then shows what those scores do as a budget screen, and Figure 2 shows why the blended curve does not separate from boosting.
 
 Table 1 is the holdout comparison. Logistic regression reaches AUC 0.873 (95% interval 0.860–0.887). The six-rule knowledge layer reaches 0.854 (0.840–0.867). Gradient boosting reaches 0.891 (0.879–0.903). KAID reaches 0.891 (0.878–0.903). The Brier score moves in the same direction: 0.120, 0.125, 0.110, and 0.110. Mean predicted probability on the holdout is 0.237 for boosting and 0.237 for KAID, against a ready rate of 0.233, so the probabilities sit on the scale of the outcome. The Prioritize cut of 0.50 is therefore a high bar relative to the base rate, not a cut that merely recovers the sample prevalence.
 
@@ -134,17 +140,19 @@ Two thousand replicates. A negative difference means the first method is worse.
 
 ![Holdout decision bands](figures/figure1_decision.png)
 
-Figure 1. Holdout decision bands. Panel (a) is the share of firm-years in which each knowledge routine fires. Panel (b) is the share actually ready, with a 95% enterprise-bootstrap interval. The dashed line is the holdout base rate.
+Figure 1. Holdout decision bands from the KAID score K. Panel (a) is the share of firm-years in which each knowledge routine fires. All six routines were observed for every retained firm-year. Panel (b) is the share coded ready, with a 95% enterprise-bootstrap interval. The dashed line is the holdout base rate, 23.3%. The three intervals do not overlap. Process innovation and training are the routines that separate Hold from Prioritize.
 
 Figure 1 is the decision the probability is for. Of 2,932 holdout firm-years, 1,786 fall in Hold and 4.0% of them are ready (3.1–5.0). 487 fall in Develop and 38.4% are ready (33.9–42.5). 659 fall in Prioritize and 64.5% are ready (60.7–68.2). The intervals do not overlap. Relative to Prioritize firms, Hold firms are separated by process innovation: it is absent for 93.5% of Hold firm-years and for 11.8% of Prioritize firm-years. Training is absent for 98.2% of Hold firm-years. Develop firms are separated by training, absent for 72.9% against 29.3% in Prioritize. Inside Prioritize, the routine most often still missing is knowledge creation: 48.0% have neither in-house R&D expenditure nor an R&D department. External R&D is rare in every band and is not used as that recommendation.
 
 ![Holdout receiver-operating curves](figures/figure2_roc.png)
 
-Figure 2. Holdout receiver-operating curves. KAID is drawn dashed because it lies on the AI curve: the training weight on the AI layer is 0.95.
+Figure 2. Holdout receiver-operating curves. The dashed KAID curve is marked so it remains visible where it lies on the AI curve. The training weight on the AI layer is 0.95, and the paired difference in AUC is −0.0002 (p = 0.223). The diagonal is chance.
 
 Figure 2 shows the same paired result as overlapping curves. Process innovation is the strongest single boosting input. Dropping it and refitting the AI layer leaves a holdout AUC of 0.852, close to the knowledge layer and still above chance. The gain from 0.852 to 0.891 is the rest of the innovation record, not one item standing alone. On the 1,782 holdout firm-years where cooperation was asked, the main AI model has AUC 0.800, cooperation alone has AUC 0.634, and adding the cooperation item moves AUC from 0.800 to 0.811.
 
 ## 4. Discussion
+
+Section 3 ranked the scores. The reason to keep the rules is not that ranking. A manager who receives only an AUC still does not know which routine the next budget would have to supply, which is the decision the introduction set out to support.
 
 The holdout separates two questions that the cited literature often keeps together. The first is which score carries the probability. A linear reading of the innovation survey already reaches AUC 0.873. Six explicit routines are a readable compression of that record, and they lose to the linear model by 0.020 AUC. Boosting adds a further 0.018 over logistic regression. Blending the knowledge probability back in, at the training weight w = 0.95, does not improve on boosting (p = 0.223). That negative result qualifies the second contribution. Coupling the layers was worth testing because reviews treat an artificial-intelligence output as an input to the innovation process rather than as a substitute for it (Haefner et al., 2021; Mariani et al., 2023; Sjödin et al., 2021). The organizational consequence those reviews ask for is not, on this holdout, a higher score (Dwivedi et al., 2021). A reader who wants only a probability can stop at the AI layer.
 
@@ -162,7 +170,7 @@ The microdata are not included. LAIS is distributed by the Inter-American Develo
 
 This Short Communication presented KAID, a knowledge-based AI decision aid that predicts digital-transformation readiness from enterprise innovation data and returns a band rather than only a rank. The studies cited in the introduction map digital transformation, capabilities, and readiness. They do not score this innovation record. Across 2,932 holdout firm-years, gradient boosting was the better probability, a logistic model beat an explicit six-rule score, and blending the two probabilities did not help. The bands still separated realized readiness from 4.0% to 64.5%, and each band pointed to a different missing routine: process innovation, training, or knowledge creation.
 
-KAID is a pre-commitment screen for a data-centric offer. It is not a valuation of that offer, and it is not evidence that buying the named routine will cause readiness. Used that way, the negative result on the blend is part of the finding. The probability and the rule answer different questions, and only one of them should be averaged.
+KAID is a pre-commitment screen for a data-centric offer. It matters where a firm must decide the next budget before it has revenue from a digital product. It is not a valuation of that offer, and it is not evidence that buying the named routine will cause readiness. Used that way, the negative result on the blend is part of the finding. The probability and the rule answer different questions, and only one of them should be averaged.
 
 ## CRediT authorship contribution statement
 
