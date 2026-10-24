@@ -6,11 +6,13 @@ Sai Vignesh Akkineni
 
 Doctor of Business Administration candidate
 
+Corresponding author. Email: saivigneshakkineni2@gmail.com
+
 ## Highlights
 
-- Readiness is scored from innovation routines, not from digital spend.
-- AI-layer holdout AUC is 0.891; the six-rule score is 0.854.
-- Blending the two probabilities does not beat the AI layer.
+- Readiness is scored from innovation routines, not digital spend.
+- A flexible score outranks six explicit knowledge rules.
+- Blending the two probabilities does not improve the score.
 - Hold, Develop, and Prioritize separate realized readiness.
 - Each band names one missing routine for the next spend.
 
@@ -186,15 +188,19 @@ Sai Vignesh Akkineni: Conceptualization, Methodology, Software, Validation, Form
 
 ## Declaration of competing interest
 
-The author declares that there are no known competing financial interests or personal relationships that could have appeared to influence the work reported in this manuscript.
+The author declares no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
 
-## Declaration of generative AI and AI-assisted technologies
+## Declaration of generative AI and AI-assisted technologies in the manuscript preparation process
 
-During preparation of this manuscript, AI-assisted tools were used for language drafting, editing, organization, and manuscript formatting support. The author reviewed and edited the content and takes full responsibility for the final manuscript. The tables and figures were generated from the executable analysis and from `results.json`.
+During the preparation of this work the author used Cursor to assist with drafting, editing, organization, and formatting of the manuscript and with organization of the analysis code. After using this tool, the author reviewed and edited the content as needed and takes full responsibility for the content of the published article. The estimates, tables, and figures are outputs of that analysis on the public survey file.
 
 ## Funding
 
-This research received no specific grant from any funding agency in the public, commercial, or not-for-profit sectors.
+This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
+
+## Ethical approval
+
+Ethical approval was not required. The study uses the public LAIS microdata and collected no new data from human participants.
 
 ## Data availability
 

@@ -418,6 +418,62 @@ def plot_decision(path: Path, frame: pd.DataFrame, assigned: list[str], band_row
     plt.close(fig)
 
 
+def plot_graphical_abstract(path: Path) -> None:
+    """Landscape summary for the Elsevier upload. Minimum size is 1328 by 531 pixels."""
+    fig = plt.figure(figsize=(13.28, 5.31), dpi=200)
+    fig.patch.set_facecolor("white")
+    ax = fig.add_axes([0.0, 0.0, 1.0, 1.0])
+    ax.set_xlim(0, 1328)
+    ax.set_ylim(0, 531)
+    ax.axis("off")
+    ink = "#102A43"
+    muted = "#52606D"
+
+    ax.text(40, 492, "From an innovation record to a readiness decision", fontsize=16, color=ink, ha="left", va="center")
+
+    def card(x, y, w, h, title):
+        box = plt.Rectangle((x, y), w, h, facecolor="#F7F9FB", edgecolor="#D9E2EC", linewidth=1.2, joinstyle="round")
+        ax.add_patch(box)
+        ax.text(x + 18, y + h - 28, title, fontsize=12, color=ink, ha="left", va="center")
+
+    def arrow(x, y):
+        ax.annotate("", xy=(x + 36, y), xytext=(x, y), arrowprops=dict(arrowstyle="-|>", color="#829AB1", lw=1.6))
+
+    card(36, 48, 360, 400, "Innovation record")
+    routines = ["Knowledge creation", "External R&D", "Training", "Organizational innovation", "Product innovation", "Process innovation"]
+    for i, label in enumerate(routines):
+        ax.text(58, 372 - i * 42, label, fontsize=11, color="#243B53", ha="left", va="center")
+    ax.text(58, 92, "Digital markers are the label only.", fontsize=9, color=muted, ha="left", va="center")
+
+    arrow(412, 248)
+    card(460, 48, 360, 400, "Two scores, one blend")
+    ax.text(482, 360, "Knowledge layer", fontsize=12, color="#3D5A80", ha="left", va="center")
+    ax.text(482, 332, "Six routines, calibrated on the training sample", fontsize=9.5, color=muted, ha="left", va="center")
+    ax.text(482, 276, "AI layer", fontsize=12, color="#E07A3D", ha="left", va="center")
+    ax.text(482, 248, "Gradient boosting on the same items", fontsize=9.5, color=muted, ha="left", va="center")
+    ax.plot([482, 790], [210, 210], color="#E4E7EB", lw=1)
+    ax.text(482, 168, "KAID  =  0.95 AI  +  0.05 knowledge", fontsize=11, color=ink, ha="left", va="center")
+    ax.text(482, 132, "The holdout does not favor the blend.", fontsize=9.5, color=muted, ha="left", va="center")
+
+    arrow(836, 248)
+    card(884, 48, 408, 400, "Readiness band")
+    bands = [
+        ("Hold", "4.0% ready", "Missing: process innovation", "#9B3A3A"),
+        ("Develop", "38.4% ready", "Missing: training", "#C47B2B"),
+        ("Prioritize", "64.5% ready", "Missing: knowledge creation", "#1F7A4D"),
+    ]
+    for i, (name, rate, gap, color) in enumerate(bands):
+        top = 372 - i * 100
+        ax.add_patch(plt.Rectangle((906, top - 28), 10, 52, facecolor=color, edgecolor="none"))
+        ax.text(930, top + 12, name, fontsize=12, color=ink, ha="left", va="center")
+        ax.text(930, top - 14, f"{rate}     {gap}", fontsize=9.5, color="#334E68", ha="left", va="center")
+
+    path.parent.mkdir(exist_ok=True)
+    fig.savefig(path, dpi=200, facecolor="white")
+    fig.savefig(path.with_suffix(".pdf"), facecolor="white")
+    plt.close(fig)
+
+
 def plot_roc(path: Path, target: np.ndarray, curves: dict[str, np.ndarray]) -> None:
     fig, ax = plt.subplots(figsize=(6.6, 6.2))
     fig.patch.set_facecolor("white")
@@ -659,6 +715,7 @@ def main() -> None:
     figure_dir = ROOT / "figures"
     figure_dir.mkdir(exist_ok=True)
     plot_decision(figure_dir / "figure1_decision.png", test, assigned, bands, float(y_test.mean()))
+    plot_graphical_abstract(figure_dir / "graphical_abstract.png")
     plot_roc(
         figure_dir / "figure2_roc.png",
         y_test,
