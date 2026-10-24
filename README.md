@@ -36,5 +36,5 @@ The microdata are licensed CC BY-NC-ND 3.0 IGO. This repository redistributes th
 | `results.json` | Holdout numbers written by the script |
 | `figures/figure1_decision.png` | Decision bands and knowledge routines |
 | `figures/figure2_roc.png` | Holdout ROC curves |
-| `figures/graphical_abstract.png` | Separate Elsevier graphical abstract |
-| `highlights.txt` | Highlights file for the submission upload |
+| `figures/graphical_abstract.png` | Optional graphical abstract; the live guide could not be confirmed to require one |
+| `highlights.txt` | Five highlights, each under 85 characters, for a separate upload if the portal asks for one |
