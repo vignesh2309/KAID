@@ -1,0 +1,261 @@
+{
+  "data": {
+    "source": "LAIS public microdata",
+    "doi": "10.60966/hbz4-cm10",
+    "url": "https://data.iadb.org/files/download/1fe5f05a-8b2a-4a4b-badc-9d8cebaf8011",
+    "n_estimation": 14663,
+    "n_enterprises": 12070,
+    "n_train_rows": 11731,
+    "n_test_rows": 2932,
+    "n_train_enterprises": 9656,
+    "n_test_enterprises": 2414,
+    "ready_rate": 0.2355588897224306,
+    "train_ready_rate": 0.2361265024294604,
+    "test_ready_rate": 0.23328785811732605,
+    "countries": [
+      "Ecuador",
+      "El Salvador",
+      "Panama",
+      "Paraguay",
+      "Peru"
+    ],
+    "years": [
+      "2009",
+      "2012",
+      "2013",
+      "2014",
+      "2015",
+      "2016"
+    ],
+    "label": "Ready when at least half of the observed digital markers equal 1, among firms with at least three observed markers."
+  },
+  "markers": [
+    {
+      "marker": "web",
+      "label": "Website",
+      "share_positive": 0.5052854122621564,
+      "share_observed": 0.25806451612903225
+    },
+    {
+      "marker": "IS_dep",
+      "label": "Informatics and systems department",
+      "share_positive": 0.3302731582511852,
+      "share_observed": 0.9062947555070586
+    },
+    {
+      "marker": "dsoftwexp",
+      "label": "Software innovation expenditure",
+      "share_positive": 0.1848871308736275,
+      "share_observed": 1.0
+    },
+    {
+      "marker": "dhardwexp",
+      "label": "Hardware innovation expenditure",
+      "share_positive": 0.166609834276751,
+      "share_observed": 1.0
+    },
+    {
+      "marker": "dictexp",
+      "label": "ICT innovation expenditure",
+      "share_positive": 0.241355793493828,
+      "share_observed": 1.0
+    }
+  ],
+  "rules": [
+    {
+      "rule": "creation",
+      "label": "Knowledge creation",
+      "definition": "In-house R&D expenditure or a formal R&D department",
+      "share_firing": 0.19866330218918365,
+      "share_observed": 1.0
+    },
+    {
+      "rule": "acquisition",
+      "label": "External knowledge",
+      "definition": "External R&D expenditure",
+      "share_firing": 0.059605810543544975,
+      "share_observed": 1.0
+    },
+    {
+      "rule": "training",
+      "label": "Training for innovation",
+      "definition": "Innovation-related training expenditure",
+      "share_firing": 0.21305326331582897,
+      "share_observed": 1.0
+    },
+    {
+      "rule": "organization",
+      "label": "Organizational integration",
+      "definition": "Organizational innovation",
+      "share_firing": 0.27906976744186046,
+      "share_observed": 1.0
+    },
+    {
+      "rule": "product",
+      "label": "Product innovation",
+      "definition": "Product innovation",
+      "share_firing": 0.32039828138852894,
+      "share_observed": 1.0
+    },
+    {
+      "rule": "process",
+      "label": "Process innovation",
+      "definition": "Process innovation",
+      "share_firing": 0.34917820364181956,
+      "share_observed": 1.0
+    }
+  ],
+  "weight_on_ai": 0.9500000000000001,
+  "thresholds": {
+    "knowledge_f1": 0.22499999999999998,
+    "ai_f1": 0.3,
+    "kaid_f1": 0.35,
+    "prioritize_at": 0.5,
+    "develop_at_training_prevalence": 0.2361265024294604
+  },
+  "holdout": {
+    "knowledge": {
+      "auc": 0.8536382567480385,
+      "f1": 0.6263736263736264,
+      "precision": 0.5017605633802817,
+      "recall": 0.8333333333333334,
+      "balanced_accuracy": 0.7907769869513641,
+      "brier": 0.1249561115360812
+    },
+    "ai": {
+      "auc": 0.891437938336351,
+      "f1": 0.6779661016949152,
+      "precision": 0.5647517039922103,
+      "recall": 0.847953216374269,
+      "balanced_accuracy": 0.8245549000020811,
+      "brier": 0.11000480745776783
+    },
+    "kaid": {
+      "auc": 0.8911911302574349,
+      "f1": 0.6781115879828327,
+      "precision": 0.5839493136219641,
+      "recall": 0.8084795321637427,
+      "balanced_accuracy": 0.816606314124576,
+      "brier": 0.11002914715833395
+    }
+  },
+  "bands": [
+    {
+      "band": "Hold",
+      "n": 1786,
+      "ready_rate": 0.040313549832026875,
+      "advised_routine": "process",
+      "absent_share": {
+        "creation": 0.9546472564389697,
+        "acquisition": 0.9927211646136618,
+        "training": 0.9815229563269877,
+        "organization": 0.8628219484882419,
+        "product": 0.9025755879059351,
+        "process": 0.93505039193729
+      }
+    },
+    {
+      "band": "Develop",
+      "n": 487,
+      "ready_rate": 0.3839835728952772,
+      "advised_routine": "training",
+      "absent_share": {
+        "creation": 0.728952772073922,
+        "acquisition": 0.9137577002053389,
+        "training": 0.728952772073922,
+        "organization": 0.7186858316221766,
+        "product": 0.3737166324435318,
+        "process": 0.31006160164271046
+      }
+    },
+    {
+      "band": "Prioritize",
+      "n": 659,
+      "ready_rate": 0.644916540212443,
+      "advised_routine": "creation",
+      "absent_share": {
+        "creation": 0.4779969650986343,
+        "acquisition": 0.8072837632776935,
+        "training": 0.2928679817905918,
+        "organization": 0.38391502276176026,
+        "product": 0.3171471927162367,
+        "process": 0.11836115326251896
+      }
+    }
+  ],
+  "importance": [
+    {
+      "feature": "dinnpc",
+      "auc_drop": 0.11834455513412832
+    },
+    {
+      "feature": "dtrainexp",
+      "auc_drop": 0.03706771191026208
+    },
+    {
+      "feature": "dinnpd",
+      "auc_drop": 0.029203712266654205
+    },
+    {
+      "feature": "sector",
+      "auc_drop": 0.015091793745187404
+    },
+    {
+      "feature": "country",
+      "auc_drop": 0.011065472752908381
+    },
+    {
+      "feature": "log_empl",
+      "auc_drop": 0.007141053581090989
+    },
+    {
+      "feature": "dinnorg",
+      "auc_drop": 0.006237472620236828
+    },
+    {
+      "feature": "year",
+      "auc_drop": 0.0033868636969053706
+    },
+    {
+      "feature": "drdintexp",
+      "auc_drop": 0.002431661151693007
+    },
+    {
+      "feature": "dinnmkt",
+      "auc_drop": 0.0015152357651245785
+    },
+    {
+      "feature": "RD_dep",
+      "auc_drop": 0.0011744520145262477
+    },
+    {
+      "feature": "dforeign_Y3",
+      "auc_drop": 7.275798110344123e-05
+    },
+    {
+      "feature": "group",
+      "auc_drop": -7.26360403529025e-05
+    },
+    {
+      "feature": "drdextexp",
+      "auc_drop": -0.0008526910209984834
+    }
+  ],
+  "process_sensitivity": {
+    "auc_without_process_innovation": 0.851922306507669
+  },
+  "cooperation_sensitivity": {
+    "n_train": 7136,
+    "n_test": 1782,
+    "ready_rate_when_asked": 0.3832772166105499,
+    "auc_main_model_on_asked": 0.7997354176630691,
+    "auc_with_cooperation_item": 0.8107090566827024,
+    "auc_cooperation_item_alone": 0.6341016790187273
+  },
+  "mean_predicted": {
+    "knowledge": 0.23444078314901476,
+    "ai": 0.23673359270287206,
+    "kaid": 0.2366189522251792
+  },
+  "seed": 42
+}
