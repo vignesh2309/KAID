@@ -24,9 +24,10 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.impute import SimpleImputer
 from sklearn.isotonic import IsotonicRegression
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     brier_score_loss,
     f1_score,
@@ -36,6 +37,8 @@ from sklearn.metrics import (
     roc_curve,
 )
 from sklearn.model_selection import GroupKFold, GroupShuffleSplit
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 ROOT = Path(__file__).resolve().parent
 CACHE = ROOT / ".cache" / "LAIS_public.csv"
@@ -223,6 +226,26 @@ class AILayer:
         return np.clip(probability, 0.0, 1.0)
 
 
+class LogisticLayer:
+    """Linear baseline. Median imputation is used only here; boosting keeps missingness."""
+
+    def fit(self, frame: pd.DataFrame, target: np.ndarray) -> "LogisticLayer":
+        self.design = Design().fit(frame)
+        self.model = Pipeline(
+            [
+                ("impute", SimpleImputer(strategy="median")),
+                ("scale", StandardScaler()),
+                ("clf", LogisticRegression(C=1.0, max_iter=2000, random_state=SEED)),
+            ]
+        )
+        self.model.fit(self.design.transform(frame), target)
+        return self
+
+    def predict(self, frame: pd.DataFrame) -> np.ndarray:
+        probability = self.model.predict_proba(self.design.transform(frame))[:, 1]
+        return np.clip(probability, 0.0, 1.0)
+
+
 def metrics(target: np.ndarray, probability: np.ndarray, threshold: float) -> dict:
     predicted = (probability >= threshold).astype(int)
     return {
@@ -259,18 +282,21 @@ def best_weight(target: np.ndarray, knowledge: np.ndarray, ai: np.ndarray) -> fl
     return best_w
 
 
-def out_of_fold(frame: pd.DataFrame, target: np.ndarray, groups: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def out_of_fold(frame: pd.DataFrame, target: np.ndarray, groups: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     knowledge = np.full(len(frame), np.nan)
     ai = np.full(len(frame), np.nan)
+    logistic = np.full(len(frame), np.nan)
     splitter = GroupKFold(n_splits=5)
     for train_idx, valid_idx in splitter.split(frame, target, groups):
-        knowledge_model = KnowledgeLayer().fit(frame.iloc[train_idx], target[train_idx])
-        ai_model = AILayer().fit(frame.iloc[train_idx], target[train_idx])
-        knowledge[valid_idx] = knowledge_model.predict(frame.iloc[valid_idx])
-        ai[valid_idx] = ai_model.predict(frame.iloc[valid_idx])
-    if not np.isfinite(knowledge).all() or not np.isfinite(ai).all():
+        train_frame = frame.iloc[train_idx]
+        valid_frame = frame.iloc[valid_idx]
+        y_fold = target[train_idx]
+        knowledge[valid_idx] = KnowledgeLayer().fit(train_frame, y_fold).predict(valid_frame)
+        ai[valid_idx] = AILayer().fit(train_frame, y_fold).predict(valid_frame)
+        logistic[valid_idx] = LogisticLayer().fit(train_frame, y_fold).predict(valid_frame)
+    if not np.isfinite(knowledge).all() or not np.isfinite(ai).all() or not np.isfinite(logistic).all():
         raise RuntimeError("Out-of-fold probabilities were not finite")
-    return knowledge, ai
+    return knowledge, ai, logistic
 
 
 def grouped_importance(model: AILayer, frame: pd.DataFrame, target: np.ndarray) -> list[dict]:
@@ -302,69 +328,200 @@ def decision_band(probability: float, prevalence: float) -> str:
     return "Hold"
 
 
-def plot_architecture(path: Path) -> None:
-    fig, ax = plt.subplots(figsize=(10.6, 6.2))
-    ax.set_xlim(0, 100)
-    ax.set_ylim(0, 68)
-    ax.axis("off")
+RULE_TICKS = {
+    "creation": "Knowledge\ncreation",
+    "acquisition": "External\nR&D",
+    "training": "Training",
+    "organization": "Organizational\nintegration",
+    "product": "Product\ninnovation",
+    "process": "Process\ninnovation",
+}
+BAND_COLORS = {"Hold": "#9B3A3A", "Develop": "#C47B2B", "Prioritize": "#1F7A4D"}
+
+
+def _style(ax: plt.Axes) -> None:
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.tick_params(colors="#243B53")
+    ax.yaxis.label.set_color("#243B53")
+    ax.xaxis.label.set_color("#243B53")
+
+
+def plot_decision(path: Path, frame: pd.DataFrame, assigned: list[str], band_rows: list[dict], base_rate: float) -> None:
+    bands = ["Hold", "Develop", "Prioritize"]
+    keys = [key for key, _label, _columns in RULES]
+    assigned_array = np.array(assigned)
+    fig, axes = plt.subplots(1, 2, figsize=(11.4, 4.9), gridspec_kw={"width_ratios": [1.45, 1]})
     fig.patch.set_facecolor("white")
 
-    def box(x, y, w, h, title, body, face):
-        patch = FancyBboxPatch(
-            (x, y),
-            w,
-            h,
-            boxstyle="round,pad=0.4,rounding_size=1.2",
-            linewidth=1.1,
-            edgecolor="#1F2933",
-            facecolor=face,
+    ax = axes[0]
+    x = np.arange(len(keys))
+    width = 0.24
+    for offset, band in enumerate(bands):
+        mask = assigned_array == band
+        heights = []
+        for key in keys:
+            known = frame.loc[mask, key].dropna()
+            heights.append(float((known == 1).mean()) if len(known) else 0.0)
+        ax.bar(
+            x + (offset - 1) * width,
+            heights,
+            width,
+            label=band,
+            color=BAND_COLORS[band],
+            edgecolor="white",
+            linewidth=0.5,
+            zorder=3,
         )
-        ax.add_patch(patch)
-        ax.text(x + w / 2, y + h * 0.68, title, ha="center", va="center", fontsize=11, fontweight="bold", color="#102A43")
-        ax.text(x + w / 2, y + h * 0.34, body, ha="center", va="center", fontsize=8.5, color="#243B53", linespacing=1.25)
+    ax.set_xticks(x)
+    ax.set_xticklabels([RULE_TICKS[key] for key in keys], fontsize=8)
+    ax.set_ylim(0, 1.05)
+    ax.set_ylabel("Share of firm-years in which the routine fires")
+    ax.set_title("(a)  Knowledge routines inside each decision band", loc="left", fontsize=11, color="#102A43", pad=18)
+    ax.legend(frameon=False, ncol=3, loc="lower left", bbox_to_anchor=(0.0, 1.01), borderaxespad=0)
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda value, _pos: f"{int(value * 100)}%"))
+    ax.grid(axis="y", color="#E4E7EB", zorder=0)
+    _style(ax)
 
-    def arrow(x1, y1, x2, y2):
-        ax.add_patch(FancyArrowPatch((x1, y1), (x2, y2), arrowstyle="-|>", mutation_scale=12, linewidth=1.2, color="#334E68"))
-
-    box(28, 54, 44, 10, "Enterprise innovation data", "R&D, training, and innovation outputs\nDigital markers are held out of this layer", "#F0F4F8")
-    box(4, 30, 40, 16, "Knowledge layer", "Six routines from the knowledge-based view\nS = share of observed routines that fire\nCalibrated to a probability on training firms", "#D9E8F6")
-    box(56, 30, 40, 16, "AI layer", "Gradient boosting on the same innovation items\nMissing survey answers stay missing\nP = probability the firm is ready", "#FCE8D5")
-    box(24, 12, 52, 12, "Decision layer", "KAID score = w·P + (1 − w)·S\nw minimizes training Brier score, then the score is frozen", "#E3F4E3")
-    box(6, 1.2, 26, 7.2, "Hold", "Score below the training\nreadiness rate", "#FDE8E8")
-    box(37, 1.2, 26, 7.2, "Develop", "Between the base rate\nand a 0.50 probability", "#FFF6E0")
-    box(68, 1.2, 26, 7.2, "Prioritize", "Probability of readiness\nat least 0.50", "#E5F6E5")
-    arrow(50, 54, 24, 46)
-    arrow(50, 54, 76, 46)
-    arrow(24, 30, 42, 24)
-    arrow(76, 30, 58, 24)
-    arrow(40, 12, 19, 8.4)
-    arrow(50, 12, 50, 8.4)
-    arrow(60, 12, 81, 8.4)
-    ax.set_title("KAID decision-support architecture", loc="left", fontsize=13, color="#102A43", pad=8)
+    ax = axes[1]
+    lookup = {row["band"]: row for row in band_rows}
+    rates = np.array([lookup[band]["ready_rate"] for band in bands])
+    low = np.array([lookup[band]["ci_low"] for band in bands])
+    high = np.array([lookup[band]["ci_high"] for band in bands])
+    xs = np.arange(len(bands))
+    ax.bar(xs, rates, color=[BAND_COLORS[band] for band in bands], width=0.62, edgecolor="white", zorder=3)
+    ax.errorbar(
+        xs,
+        rates,
+        yerr=np.vstack([rates - low, high - rates]),
+        fmt="none",
+        ecolor="#102A43",
+        elinewidth=1.1,
+        capsize=4,
+        zorder=4,
+    )
+    ax.axhline(base_rate, color="#52606D", linestyle="--", linewidth=1, label=f"Holdout base rate {base_rate:.1%}")
+    for index, band in enumerate(bands):
+        ax.text(index, min(high[index] + 0.045, 0.97), f"n = {lookup[band]['n']:,}", ha="center", va="bottom", fontsize=8, color="#334E68")
+    ax.set_xticks(xs)
+    ax.set_xticklabels(bands)
+    ax.set_ylim(0, 1.05)
+    ax.set_ylabel("Share actually ready")
+    ax.set_title("(b)  Realized readiness (95% bootstrap interval)", loc="left", fontsize=11, color="#102A43", pad=18)
+    ax.legend(frameon=False, loc="upper left")
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda value, _pos: f"{int(value * 100)}%"))
+    ax.grid(axis="y", color="#E4E7EB", zorder=0)
+    _style(ax)
     fig.tight_layout()
-    fig.savefig(path, dpi=300, bbox_inches="tight")
+    fig.savefig(path, dpi=400, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
 
 def plot_roc(path: Path, target: np.ndarray, curves: dict[str, np.ndarray]) -> None:
-    fig, ax = plt.subplots(figsize=(6.4, 5.4))
-    colors = {"Knowledge layer": "#4C78A8", "AI layer": "#F58518", "KAID": "#1B7F4E"}
+    fig, ax = plt.subplots(figsize=(6.8, 5.8))
+    fig.patch.set_facecolor("white")
+    style = {
+        "Logistic regression": ("#7B8794", "-", 1.8),
+        "Knowledge layer": ("#3D5A80", "-", 2.0),
+        "AI layer": ("#E07A3D", "-", 2.3),
+        "KAID": ("#1F7A4D", "--", 2.3),
+    }
     for name, probability in curves.items():
-        fpr, tpr, _ = roc_curve(target, probability)
+        fpr, tpr, _thresholds = roc_curve(target, probability)
         auc = roc_auc_score(target, probability)
-        ax.plot(fpr, tpr, color=colors[name], lw=2.2, label=f"{name}  AUC {auc:.3f}")
-    ax.plot([0, 1], [0, 1], color="#9AA5B1", lw=1, linestyle="--", label="Chance")
+        color, linestyle, width = style[name]
+        ax.plot(fpr, tpr, color=color, linestyle=linestyle, lw=width, label=f"{name}   AUC {auc:.3f}")
+    ax.plot([0, 1], [0, 1], color="#9AA5B1", lw=1, linestyle=":", label="Chance   AUC 0.500")
     ax.set_xlabel("False positive rate")
     ax.set_ylabel("True positive rate")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
-    ax.set_title("Holdout discrimination")
-    ax.legend(frameon=False, loc="lower right")
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
+    ax.set_aspect("equal", adjustable="box")
+    ax.set_title("Holdout discrimination", loc="left", fontsize=12, color="#102A43")
+    ax.legend(frameon=False, loc="lower right", fontsize=8.5)
+    ax.grid(color="#E4E7EB")
+    _style(ax)
     fig.tight_layout()
-    fig.savefig(path, dpi=300, bbox_inches="tight")
+    fig.savefig(path, dpi=400, bbox_inches="tight", facecolor="white")
     plt.close(fig)
+
+
+def _enterprise_draws(groups: np.ndarray, n_boot: int, rng: np.random.Generator) -> list[np.ndarray]:
+    enterprises = pd.unique(groups)
+    rows_of = {enterprise: np.flatnonzero(groups == enterprise) for enterprise in enterprises}
+    draws = []
+    for _ in range(n_boot):
+        chosen = rng.choice(enterprises, size=len(enterprises), replace=True)
+        draws.append(np.concatenate([rows_of[enterprise] for enterprise in chosen]))
+    return draws
+
+
+def bootstrap_auc(target: np.ndarray, curves: dict[str, np.ndarray], groups: np.ndarray, n_boot: int = 2000) -> dict:
+    rng = np.random.default_rng(SEED)
+    draws = _enterprise_draws(groups, n_boot, rng)
+    names = list(curves)
+    pairs = [("ai", "knowledge"), ("ai", "logistic"), ("knowledge", "logistic"), ("kaid", "ai"), ("kaid", "knowledge")]
+    kept_auc = {name: [] for name in names}
+    kept_diff = {pair: [] for pair in pairs}
+    for rows in draws:
+        y = target[rows]
+        if np.unique(y).size < 2:
+            continue
+        aucs = {name: roc_auc_score(y, curves[name][rows]) for name in names}
+        for name, value in aucs.items():
+            kept_auc[name].append(value)
+        for pair in pairs:
+            kept_diff[pair].append(aucs[pair[0]] - aucs[pair[1]])
+
+    def pack(samples: list[float], point: float, against_zero: bool) -> dict:
+        array = np.asarray(samples, dtype=float)
+        low, high = np.quantile(array, [0.025, 0.975])
+        record = {
+            "point": float(point),
+            "ci_low": float(low),
+            "ci_high": float(high),
+            "n_boot": int(array.size),
+        }
+        if against_zero:
+            tail = min(float(np.mean(array <= 0)), float(np.mean(array >= 0)))
+            record["p_two_sided"] = float(min(1.0, 2 * tail))
+        return record
+
+    intervals = {}
+    for name, samples in kept_auc.items():
+        intervals[name] = pack(samples, float(roc_auc_score(target, curves[name])), against_zero=False)
+    comparisons = []
+    for left, right in pairs:
+        point = float(roc_auc_score(target, curves[left]) - roc_auc_score(target, curves[right]))
+        record = pack(kept_diff[(left, right)], point, against_zero=True)
+        record["contrast"] = f"{left} minus {right}"
+        comparisons.append(record)
+    return {"auc": intervals, "comparisons": comparisons}
+
+
+def bootstrap_band_rates(target: np.ndarray, assigned: list[str], groups: np.ndarray, n_boot: int = 2000) -> dict[str, dict]:
+    rng = np.random.default_rng(SEED + 1)
+    assigned_array = np.array(assigned)
+    draws = _enterprise_draws(groups, n_boot, rng)
+    out = {}
+    for band in ("Hold", "Develop", "Prioritize"):
+        samples = []
+        for rows in draws:
+            chosen = assigned_array[rows] == band
+            if not np.any(chosen):
+                continue
+            samples.append(float(target[rows][chosen].mean()))
+        array = np.asarray(samples, dtype=float)
+        mask = assigned_array == band
+        low, high = np.quantile(array, [0.025, 0.975])
+        out[band] = {
+            "ready_rate": float(target[mask].mean()),
+            "ci_low": float(low),
+            "ci_high": float(high),
+            "n": int(mask.sum()),
+            "n_boot": int(array.size),
+        }
+    return out
 
 
 def prevalence_table(sample: pd.DataFrame) -> list[dict]:
@@ -407,28 +564,22 @@ def main() -> None:
     y_train = train["ready"].to_numpy(dtype=int)
     y_test = test["ready"].to_numpy(dtype=int)
 
-    oof_knowledge, oof_ai = out_of_fold(train, y_train, train["enterprise"].to_numpy())
+    oof_knowledge, oof_ai, oof_logistic = out_of_fold(train, y_train, train["enterprise"].to_numpy())
     weight = best_weight(y_train, oof_knowledge, oof_ai)
     oof_fused = weight * oof_ai + (1.0 - weight) * oof_knowledge
     threshold = best_threshold(y_train, oof_fused)
     knowledge_threshold = best_threshold(y_train, oof_knowledge)
     ai_threshold = best_threshold(y_train, oof_ai)
+    logistic_threshold = best_threshold(y_train, oof_logistic)
 
     knowledge_model = KnowledgeLayer().fit(train, y_train)
     ai_model = AILayer().fit(train, y_train)
+    logistic_model = LogisticLayer().fit(train, y_train)
     p_knowledge = knowledge_model.predict(test)
     p_ai = ai_model.predict(test)
+    p_logistic = logistic_model.predict(test)
     p_kaid = weight * p_ai + (1.0 - weight) * p_knowledge
     prevalence = float(y_train.mean())
-
-    figure_dir = ROOT / "figures"
-    figure_dir.mkdir(exist_ok=True)
-    plot_architecture(figure_dir / "figure1_architecture.png")
-    plot_roc(
-        figure_dir / "figure2_roc.png",
-        y_test,
-        {"Knowledge layer": p_knowledge, "AI layer": p_ai, "KAID": p_kaid},
-    )
 
     bands = []
     test_rules = test[[key for key, _lab, _cols in RULES]]
@@ -469,11 +620,39 @@ def main() -> None:
         )
 
     holdout = {
+        "logistic": metrics(y_test, p_logistic, logistic_threshold),
         "knowledge": metrics(y_test, p_knowledge, knowledge_threshold),
         "ai": metrics(y_test, p_ai, ai_threshold),
         "kaid": metrics(y_test, p_kaid, threshold),
     }
+    curves = {"logistic": p_logistic, "knowledge": p_knowledge, "ai": p_ai, "kaid": p_kaid}
+    inference = bootstrap_auc(y_test, curves, test["enterprise"].to_numpy())
+    band_intervals = bootstrap_band_rates(y_test, assigned, test["enterprise"].to_numpy())
+    for row in bands:
+        row.update({key: band_intervals[row["band"]][key] for key in ("ci_low", "ci_high", "n_boot")})
+
+    figure_dir = ROOT / "figures"
+    figure_dir.mkdir(exist_ok=True)
+    plot_decision(figure_dir / "figure1_decision.png", test, assigned, bands, float(y_test.mean()))
+    plot_roc(
+        figure_dir / "figure2_roc.png",
+        y_test,
+        {
+            "Logistic regression": p_logistic,
+            "Knowledge layer": p_knowledge,
+            "AI layer": p_ai,
+            "KAID": p_kaid,
+        },
+    )
+    old_architecture = figure_dir / "figure1_architecture.png"
+    if old_architecture.exists():
+        old_architecture.unlink()
+
     importance = grouped_importance(ai_model, test, y_test)
+    without_process = AILayer(exclude=("dinnpc",)).fit(train, y_train)
+    process_sensitivity = {
+        "auc_without_process_innovation": float(roc_auc_score(y_test, without_process.predict(test))),
+    }
     asked = test["coop"].notna().to_numpy()
     cooperation = None
     if asked.sum() > 80 and len(np.unique(y_test[asked])) == 2:
@@ -488,11 +667,7 @@ def main() -> None:
         extra_model = HistGradientBoostingClassifier(**BOOSTING)
         extra_model.fit(extra_train, y_train[train_asked])
         extra_probability = extra_model.predict_proba(extra_test)[:, 1]
-        without_process = AILayer(exclude=("dinnpc",)).fit(train, y_train)
-    process_sensitivity = {
-        "auc_without_process_innovation": float(roc_auc_score(y_test, without_process.predict(test))),
-    }
-    cooperation = {
+        cooperation = {
             "n_train": int(train_asked.sum()),
             "n_test": int(asked.sum()),
             "ready_rate_when_asked": float(y_test[asked].mean()),
@@ -536,6 +711,7 @@ def main() -> None:
         "rules": prevalence_table(sample),
         "weight_on_ai": weight,
         "thresholds": {
+            "logistic_f1": logistic_threshold,
             "knowledge_f1": knowledge_threshold,
             "ai_f1": ai_threshold,
             "kaid_f1": threshold,
@@ -543,11 +719,13 @@ def main() -> None:
             "develop_at_training_prevalence": prevalence,
         },
         "holdout": holdout,
+        "inference": inference,
         "bands": bands,
         "importance": importance,
         "process_sensitivity": process_sensitivity,
         "cooperation_sensitivity": cooperation,
         "mean_predicted": {
+            "logistic": float(p_logistic.mean()),
             "knowledge": float(p_knowledge.mean()),
             "ai": float(p_ai.mean()),
             "kaid": float(p_kaid.mean()),
@@ -555,7 +733,7 @@ def main() -> None:
         "seed": SEED,
     }
     (ROOT / "results.json").write_text(json.dumps(results, indent=2))
-    print(json.dumps({"n": results["data"]["n_estimation"], "weight_on_ai": weight, "holdout": holdout, "bands": bands}, indent=2))
+    print(json.dumps({"n": results["data"]["n_estimation"], "weight_on_ai": weight, "holdout": holdout, "comparisons": inference["comparisons"], "bands": bands}, indent=2))
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ The paper is [`paper.md`](paper.md). One script, [`kaid.py`](kaid.py), downloads
 
 ## What the model does
 
-KAID scores six knowledge routines (R&D, external R&D, training, organizational innovation, product innovation, process innovation) and fits a gradient-boosting model on the same innovation items. Digital markers are the label only. They are not predictors. The holdout split keeps each enterprise on one side. On the reported split the knowledge layer reaches AUC 0.854 and boosting reaches 0.891. Blending them does not improve on boosting. The practical output is a band:
+KAID scores six knowledge routines (R&D, external R&D, training, organizational innovation, product innovation, process innovation) and fits a gradient-boosting model on the same innovation items. Digital markers are the label only. They are not predictors. The holdout split keeps each enterprise on one side. On the reported split, logistic regression reaches AUC 0.873, the knowledge layer 0.854, and boosting 0.891. Boosting beats both, and blending does not beat boosting (p = 0.223). The practical output is a band:
 
 - **Hold** — do not build the digital offer yet. The missing routine is process innovation.
 - **Develop** — build innovation training before another software purchase.
@@ -34,5 +34,5 @@ The microdata are licensed CC BY-NC-ND 3.0 IGO. This repository redistributes th
 | `kaid.py` | Data, model, figures, metrics |
 | `paper.md` | Short communication |
 | `results.json` | Holdout numbers written by the script |
-| `figures/figure1_architecture.png` | Model diagram |
+| `figures/figure1_decision.png` | Decision bands and knowledge routines |
 | `figures/figure2_roc.png` | Holdout ROC curves |

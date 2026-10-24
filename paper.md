@@ -1,132 +1,185 @@
 # A knowledge-based AI decision-support model for predicting digital transformation readiness from enterprise innovation data
 
-**Sai Vignesh Akkineni**
+Short Communication
 
-Short communication prepared for *Digital Business* (Elsevier). The live author guide should be checked for the current word limit before submission.
+Sai Vignesh Akkineni
+
+Doctor of Business Administration candidate
 
 ## Abstract
 
-Firms buy software and still have nothing new to sell. This short communication offers KAID, a decision aid that reads enterprise innovation data and returns one of three actions: hold, develop, or prioritize a digital offer. The knowledge layer codes six routines from the knowledge-based view. The AI layer is a gradient-boosting model on the same innovation items. Digital markers — website, an informatics department, and software, hardware, and ICT expenditure — form the readiness label and are kept out of the predictors. On the public Latin American innovation surveys, 14,663 firm-years and 12,070 enterprises, the knowledge layer reaches a holdout AUC of 0.854. Boosting reaches 0.891. A blend that puts 95 percent of the weight on boosting does not improve on boosting alone. The decision bands do separate firms: 4.0 percent of Hold firms are ready, 38.4 percent of Develop firms, and 64.5 percent of Prioritize firms. Hold firms are missing process innovation. Develop firms are missing innovation training. Prioritize firms still often lack an R&D routine.
+A firm can buy software and still have no new offer to sell. This Short Communication presents KAID, a knowledge-based artificial-intelligence decision aid that reads an enterprise innovation record and returns one of three actions: hold, develop, or prioritize a digital offer. Six routines from the knowledge-based view are scored explicitly. A gradient-boosting layer estimates the probability of digital-transformation readiness from the same innovation items. The readiness label is built only from digital markers — a website, an informatics and systems department, and software, hardware, and ICT innovation expenditure — and those markers are excluded from the predictors. On the public Latin American innovation surveys, 14,663 firm-years from 12,070 enterprises, a logistic regression reaches a holdout AUC of 0.873, the knowledge layer 0.854, and gradient boosting 0.891 (95% enterprise-bootstrap interval 0.879–0.903). Boosting exceeds the knowledge layer by 0.038 AUC and the logistic model by 0.018 AUC; both contrasts have bootstrap intervals that exclude zero (p < 0.001). Blending the knowledge probability into the boosting probability, with the training weight on boosting equal to 0.95, does not improve on boosting (difference −0.0002; 95% interval −0.0006 to 0.0001; p = 0.223). The decision bands do separate firms. On the holdout, 4.0% of Hold firm-years are ready (95% interval 3.1–5.0), 38.4% of Develop firm-years (33.9–42.5), and 64.5% of Prioritize firm-years (60.7–68.2). Hold is missing process innovation. Develop is missing innovation training. Prioritize still often lacks an R&D routine.
 
-**Keywords:** artificial intelligence; data; knowledge-based view; digital transformation; innovation; entrepreneurship; decision support
+**Keywords:** knowledge-based systems; artificial intelligence; enterprise innovation data; digital transformation; decision support; data-centric business models; entrepreneurship
 
-## 1. The decision problem
+## 1. Introduction
 
-A data-centric business model depends on an offer that customers will pay for, not on a model that sits inside one team (Hartmann, Zaki, Feldmann, & Neely, 2016). Digital entrepreneurship is the act of pursuing that offer (Nambisan, 2017). Digital transformation is the change in how the firm creates value (Vial, 2019). None of those statements tells a manager whether this firm, with this innovation record, should spend the next budget on software.
+Digital transformation is a change in how a firm creates value, not a purchase of software [1]. Data-centric business models depend on an offer a customer will pay for [2]. Digital entrepreneurship is the decision to pursue that offer [3]. None of those statements tells a manager whether this firm, with this innovation record, should spend the next budget on a digital product.
 
-The knowledge-based view says the firm exists to integrate specialist knowledge into a productive routine (Grant, 1996; Kogut & Zander, 1992). An AI output is another specialist product. It changes the business model only when the surrounding routines can use it. KAID makes that claim operational. It predicts digital-transformation readiness from enterprise innovation data, and it names the routine that is missing.
+The knowledge-based view treats the firm as an institution that integrates specialist knowledge into a routine that can be used [4, 5]. An artificial-intelligence output is another specialist product. It changes the business model only when the surrounding routines can carry it into what the firm sells [6, 7]. The practical question is therefore prior to model choice: which innovation routines are present, and is that record sufficient to treat the firm as ready.
 
-## 2. KAID
+This paper proposes KAID, a knowledge-based AI decision-support model for that question. Unlike a black-box classifier that stops at a probability, KAID keeps the routines visible and ties each decision band to the routine that separates it from firms judged ready to proceed. The contribution is threefold. First, a readiness label constructed only from digital markers, so the innovation predictors are not scored against themselves. Second, an explicit six-rule knowledge layer coupled to gradient boosting, with the coupling weight chosen on training data and then frozen. Third, a reproducible enterprise-level holdout with a linear baseline, bootstrap intervals, and paired contrasts, so the claim that one layer adds something can be checked rather than asserted.
 
-Figure 1 is the model. The same innovation record is read twice.
+KAID differs from a scorecard of innovation inputs in two structural ways. The knowledge layer is a small production-rule base: each routine fires or it does not, and the score is the share of routines that fire (Section 2.2). The AI layer does not replace those rules. It estimates a probability from the same items, and the decision layer uses that probability for the band while the rules name what is missing (Section 2.3). Section 4 separates those roles. The boosting layer is the better probability. The rules are the explanation. Averaging them does not produce a third, better probability.
 
-The knowledge layer scores six routines. A routine fires when the firm reports the underlying activity. The score is the share of routines that fire. Isotonic regression, fit on training firms only, maps that share to a probability.
+## 2. Proposed KAID framework
 
-The AI layer is histogram gradient boosting (Friedman, 2001) on the same items, plus country, year, sector, foreign ownership, group membership, and log employment. Missing answers stay missing. The trees may split on a missing value only for items that were asked of almost every firm in the estimation sample. Two items failed that test and were removed from the main model: innovation cooperation, which was not asked of 39 percent of firms, and the internet as an information source, which was not asked of 51 percent. Of the firms who were not asked about cooperation, 0.1 percent were coded ready. Of the firms who were not asked about the internet, 2.8 percent were coded ready. A model that used those gaps would have been scoring the questionnaire.
+### 2.1 Readiness label
 
-The decision layer forms
+Let firm-year i have a set M_i of digital markers that the survey actually asked. The five markers are a website, a formal informatics and systems department, software innovation expenditure, hardware innovation expenditure, and ICT innovation expenditure. Each observed marker d_im equals 1 when the firm reports it and 0 otherwise. The label is
 
-KAID score = w · P + (1 − w) · S,
+$$
+y_i = 1\left\{|M_i| \ge 3 \;\text{and}\; \frac{1}{|M_i|}\sum_{m \in M_i} d_{im} \ge 0.5\right\}. \quad (1)
+$$
 
-where P is the boosting probability and S is the calibrated knowledge probability. The weight w is chosen on out-of-fold predictions inside the training sample to minimize the Brier score, then frozen. Firms are not classified by that weight. They are placed in a band with two cuts fixed before looking at the holdout: Hold if the score is below the training readiness rate, Develop if it is at least that rate and below 0.50, and Prioritize if it is at least 0.50. The band says whether to pursue the digital offer. The routine that most separates the band from Prioritize firms says what to build first.
+Firm-years with fewer than three observed markers are excluded, because the label is not identified. The markers in M_i are not used as predictors. A model that predicted digital spend from digital spend would not be a test of the innovation record.
 
-![Figure 1. KAID reads innovation items as knowledge routines and as a boosting probability, then places the firm in Hold, Develop, or Prioritize.](figures/figure1_architecture.png)
+### 2.2 Knowledge-rule layer
 
-## 3. Enterprise innovation data
+The knowledge layer is a production-rule base R = {r1, …, r6}, evaluated once per firm-year. A rule fires when any of its observed survey items equals 1. If every item for that rule is missing, the rule is missing and is left out of the share. The six rules, in the order used by the code, are knowledge creation (in-house R&D expenditure or a formal R&D department), external knowledge (external R&D expenditure), training for innovation, organizational integration (organizational innovation), product innovation, and process innovation. Innovation items follow the Oslo Manual [8].
 
-The source is the public Harmonized Latin American Innovation Surveys database, LAIS (Crespi, Guillard, Salazar, & Vargas, 2022). The estimation sample keeps a firm-year only when at least three of the five digital markers were asked. Readiness equals one when at least half of the markers that were asked equal one. That rule yields 14,663 firm-years, 12,070 enterprises, in Ecuador, El Salvador, Panama, Paraguay, and Peru, from 2009 to 2016. The ready share is 23.6 percent.
+The raw knowledge score is the share of observed rules that fire,
 
-Table 1 separates the label from the predictors. Software, hardware, and ICT expenditure were asked of every firm in the sample. The informatics department was asked of 90.6 percent. A website was asked of 25.8 percent, so the label is mostly a digital-spend and digital-organization bundle, with the website used where the survey asked it. The markers are not five independent technologies: in these questionnaires, software and hardware expenditure sit close to the ICT item. The label is that bundle.
+$$
+S_i^{0} = \frac{1}{|R_i|}\sum_{r \in R_i} r_i, \quad (2)
+$$
 
-The holdout is a group split by enterprise, 20 percent of enterprises, seed 42. No enterprise is in both samples. The training sample has 11,731 firm-years (9,656 enterprises) and the holdout has 2,932 firm-years (2,414 enterprises). The holdout ready rate is 23.3 percent.
+and a training-only isotonic map g(·) converts that share into a probability S_i = g(S_i^0). The map is fit on training enterprises and applied unchanged to the holdout. External R&D fires for only 6.0% of the estimation sample, so it is retained as a rule and is not used as the routine a band “most often lacks”: a rare rule is absent in every band and would dominate that comparison for a mechanical reason.
 
-**Table 1. Label and knowledge routines**
+Two candidate rules were specified and then removed from the main model. Innovation cooperation was not asked of 39% of estimation-sample firms, and the internet as an information source was not asked of 51%. Among firms who were not asked about cooperation, 0.1% were coded ready. Among firms who were not asked about the internet, 2.8% were coded ready. Using those gaps would have scored the questionnaire. Section 4 reports what cooperation adds on the subset where the question was fielded.
 
-*Panel A. Digital markers, used only as the label*
+### 2.3 AI layer and the decision score
 
-| Marker | Positive among firms asked | Share asked |
-|---|---:|---:|
-| Website | 50.5% | 25.8% |
-| Informatics and systems department | 33.0% | 90.6% |
-| Software innovation expenditure | 18.5% | 100% |
-| Hardware innovation expenditure | 16.7% | 100% |
-| ICT innovation expenditure | 24.1% | 100% |
+The AI layer is histogram gradient boosting [10] on the survey items inside the six rules, plus marketing innovation, foreign ownership, group membership, log employment, country, year, and sector. Missing answers on items that were asked of nearly every firm stay missing; the trees may use that missingness. Country, year, and sector are one-hot encoded from the training sample only.
 
-*Panel B. Knowledge routines, used only as predictors*
+Let P_i be the boosting probability. The KAID score is
 
-| Routine | Survey definition | Firms in which it fires |
-|---|---|---:|
-| Knowledge creation | In-house R&D expenditure or a formal R&D department | 19.9% |
-| External knowledge | External R&D expenditure | 6.0% |
-| Training | Innovation-related training expenditure | 21.3% |
-| Organizational integration | Organizational innovation | 27.9% |
-| Product innovation | At least one product innovation | 32.0% |
-| Process innovation | At least one process innovation | 34.9% |
+$$
+K_i = w P_i + (1 - w) S_i, \quad (3)
+$$
 
-*Note.* Estimation sample: 14,663 firm-years, 12,070 enterprises, ready share 23.6%. Innovation items follow the Oslo Manual (OECD/Eurostat, 2018).
+where w is chosen on out-of-fold predictions inside the training sample to minimize the Brier score, then frozen. The holdout is not used to pick w. Firms are not classified by maximizing F1. They are placed with two cuts fixed before the holdout is opened. Let π be the training readiness rate. Then
 
-## 4. Holdout results
+$$
+\text{band}(K_i) =
+\begin{cases}
+\text{Hold} & \text{if } K_i < \pi, \\
+\text{Develop} & \text{if } \pi \le K_i < 0.50, \\
+\text{Prioritize} & \text{if } K_i \ge 0.50.
+\end{cases} \quad (4)
+$$
 
-Figure 2 and Table 2 report the holdout. The knowledge layer alone reaches an AUC of 0.854. Boosting reaches 0.891. The training step sets w at 0.95. The blended score reaches an AUC of 0.891 and a Brier score of 0.110, against 0.891 and 0.110 for boosting alone. Unrounded, the blend is slightly worse (AUC 0.8912 against 0.8914; Brier 0.11003 against 0.11000). KAID does not predict better than the AI layer. It matches it, and it adds the routine.
+Hold means the score is below the rate at which firms in the training sample are ready. Prioritize means the model assigns a probability of at least one half in a sample where about one firm in four is ready. Develop is the interval between those cuts. For Hold and Develop, the reported routine is the common routine whose absence most exceeds its absence among Prioritize firms. For Prioritize, it is the common routine most often still absent. A routine is common when it fires for at least 15% of the estimation sample.
 
-The probabilities are on the scale of the outcome. Mean predicted probability on the holdout is 0.237 for the AI layer and 0.237 for KAID, against a ready rate of 23.3 percent. The 0.50 Prioritize cut is therefore a high bar: the model is saying the firm is more likely ready than not, in a sample where only about one firm in four is ready.
+**Algorithm 1. KAID decision**
 
-The bands are the result a manager can use. Of 2,932 holdout firm-years, 1,786 fall in Hold and 4.0 percent of them are ready. 487 fall in Develop and 38.4 percent are ready. 659 fall in Prioritize and 64.5 percent are ready. Relative to Prioritize firms, Hold firms are distinguished by the absence of process innovation (93.5 percent absent, against 11.8 percent in Prioritize). Develop firms are distinguished by the absence of innovation training (72.9 percent absent, against 29.3 percent). Inside Prioritize, the routine most often still missing is knowledge creation: 48.0 percent have neither in-house R&D expenditure nor an R&D department.
+Input: enterprise innovation record; digital markers held out of the record; training enterprises.
+Output: band and the routine the band points to.
 
-Process innovation is the strongest single predictor. Dropping it and refitting the boosting layer leaves a holdout AUC of 0.852. The result is not one questionnaire item. Training and product innovation are the next largest contributions.
+1. Drop any firm-year with fewer than three observed digital markers, and set y_i by Eq. (1).
+2. Split enterprises, not firm-years, into training and holdout. No enterprise enters both.
+3. On training folds, fit the knowledge map g, the boosting model, and the weight w in Eq. (3).
+4. Refit g and the boosting model on all training enterprises. Freeze w.
+5. Score each holdout firm-year with Eq. (3) and assign the band in Eq. (4).
+6. Name the routine that separates that band from Prioritize, using only routines that fire for at least 15% of firms.
+7. Return the band, the score, and the named routine.
 
-Cooperation was kept out of the main model for the reason given above. On the 1,782 holdout firms who were actually asked, cooperation alone has an AUC of 0.634, and adding it to the boosting layer moves AUC from 0.800 to 0.811. Where the question was fielded, cooperation is a real but small increment. It is not safe to use where the question was omitted.
+Fixed seeds make the split, the boosting fit, and the bootstrap reproducible from the accompanying code.
 
-![Figure 2. Holdout ROC curves. KAID overlaps the AI layer because the training weight on that layer is 0.95.](figures/figure2_roc.png)
+## 3. Experimental design
 
-**Table 2. Holdout performance and decision bands**
+The source is the public Harmonized Latin American Innovation Surveys database, LAIS [9]. The estimation rule in Eq. (1) keeps 14,663 firm-years and 12,070 enterprises in Ecuador, El Salvador, Panama, Paraguay, and Peru, in 2009, 2012, 2013, 2014, 2015, and 2016. The ready share is 23.6%. Software, hardware, and ICT expenditure were asked of every retained firm-year. The informatics department was asked of 90.6%, and a website of 25.8%, so the label is a digital-spend and digital-organization bundle, with the website used where the survey asked it. Software and hardware expenditure sit close to the ICT item in these questionnaires; the label is that bundle, not five independent technologies.
 
-*Panel A. Discrimination and classification. F1, precision, and recall use the threshold chosen on training out-of-fold scores. AUC and Brier do not use that threshold.*
+Among retained firms the six routines fire at the following rates: knowledge creation 19.9%, external R&D 6.0%, training 21.3%, organizational innovation 27.9%, product innovation 32.0%, and process innovation 34.9%. A website, where asked, is reported by 50.5% of firms. An informatics department, where asked, is reported by 33.0%. Software, hardware, and ICT expenditure are reported by 18.5%, 16.7%, and 24.1%.
 
-| Layer | AUC | F1 | Precision | Recall | Balanced accuracy | Brier |
+The holdout is a group split of 20% of enterprises, seed 42. The training sample has 11,731 firm-years (9,656 enterprises). The holdout has 2,932 firm-years (2,414 enterprises) and a ready rate of 23.3%. Four scores are compared on that holdout: logistic regression with median imputation and standardized inputs; the knowledge layer; gradient boosting; and KAID. Classification thresholds used only for F1, precision, and recall are chosen on training out-of-fold scores to maximize F1. AUC and the Brier score do not use those thresholds.
+
+Uncertainty is an enterprise bootstrap with 2,000 replicates and the same seed family as the split. Each replicate draws holdout enterprises with replacement and keeps every firm-year of a drawn enterprise. AUC intervals and paired AUC differences are computed on those replicates. A two-sided bootstrap p-value is twice the smaller share of replicates in which the difference is positive or negative. When no replicate changes sign, the reported result is p < 0.001. The same resampling gives the intervals on the band-specific ready rates in Figure 1.
+
+## 4. Results and discussion
+
+Table 1 is the holdout comparison. Logistic regression reaches AUC 0.873 (95% interval 0.860–0.887). The six-rule knowledge layer reaches 0.854 (0.840–0.867). Gradient boosting reaches 0.891 (0.879–0.903). KAID reaches 0.891 (0.878–0.903). The Brier score moves in the same direction: 0.120, 0.125, 0.110, and 0.110. Mean predicted probability on the holdout is 0.237 for boosting and 0.237 for KAID, against a ready rate of 0.233, so the probabilities sit on the scale of the outcome. The Prioritize cut of 0.50 is therefore a high bar relative to the base rate, not a cut that merely recovers the sample prevalence.
+
+**Table 1. Holdout comparison. Lower Brier is better. The 95% intervals are enterprise bootstraps.**
+
+| Method | AUC | 95% interval | F1 | Precision | Recall | Brier |
 |---|---:|---:|---:|---:|---:|---:|
-| Knowledge | 0.854 | 0.626 | 0.502 | 0.833 | 0.791 | 0.125 |
-| AI | 0.891 | 0.678 | 0.565 | 0.848 | 0.825 | 0.110 |
-| KAID | 0.891 | 0.678 | 0.584 | 0.808 | 0.817 | 0.110 |
+| Logistic regression | 0.873 | 0.860–0.887 | 0.660 | 0.539 | 0.851 | 0.120 |
+| Knowledge layer | 0.854 | 0.840–0.867 | 0.626 | 0.502 | 0.833 | 0.125 |
+| AI layer | 0.891 | 0.879–0.903 | 0.678 | 0.565 | 0.848 | 0.110 |
+| KAID | 0.891 | 0.878–0.903 | 0.678 | 0.584 | 0.808 | 0.110 |
 
-*Panel B. Bands on the 2,932 holdout firm-years. The routine is the one whose absence most exceeds its absence among Prioritize firms. For Prioritize, it is the common routine most often still absent.*
+Table 2 states the paired contrasts. Boosting exceeds the knowledge layer by 0.038 AUC (0.029 to 0.046). It exceeds logistic regression by 0.018 (0.012 to 0.025). Both intervals exclude zero, and no bootstrap replicate reverses the sign (p < 0.001). The knowledge layer does not beat the linear model. Logistic regression exceeds it by 0.020 AUC (0.011 to 0.028; p < 0.001). Six explicit routines are a readable compression of the innovation record. They are not the best probability that record can support. The training step sets the KAID weight at w = 0.95. The blended score is 0.0002 AUC below boosting. The interval runs from −0.0006 to 0.0001 and includes zero (p = 0.223). KAID does not predict better than the AI layer. Figure 2 shows the same fact as overlapping curves.
 
-| Band | Firm-years | Actually ready | Routine the band points to |
-|---|---:|---:|---|
-| Hold | 1,786 | 4.0% | Process innovation |
-| Develop | 487 | 38.4% | Training for innovation |
-| Prioritize | 659 | 64.5% | Knowledge creation |
+**Table 2. Paired enterprise-bootstrap contrasts on holdout AUC. Two thousand replicates. A negative difference means the first method is worse.**
 
-## 5. What to do with the score
+| Contrast | Difference in AUC | 95% interval | p |
+|---|---:|---:|---:|
+| AI − knowledge | +0.038 | 0.029 to 0.046 | < 0.001 |
+| AI − logistic | +0.018 | 0.012 to 0.025 | < 0.001 |
+| Knowledge − logistic | −0.020 | −0.028 to −0.011 | < 0.001 |
+| KAID − AI | −0.0002 | −0.0006 to 0.0001 | 0.223 |
 
-An entrepreneur deciding whether to build a data-centric offer can read the band as a go-condition. A Hold firm is not a candidate for that offer: about one in twenty-five is digitally ready, and the innovation record is missing a process routine. The next spend is the routine, not another license. A Develop firm is a maybe. The distinctive gap is training. Buying software before people can use the new process repeats the failure the introduction described. A Prioritize firm is the candidate. Even there, about half the firms have no R&D routine, so the digital offer still needs a place where knowledge is created and kept, which is the mechanism in Grant (1996).
+![Figure 1. Holdout decision bands. Panel (a) is the share of firm-years in which each knowledge routine fires. Panel (b) is the share actually ready, with a 95% enterprise-bootstrap interval. The dashed line is the holdout base rate.](figures/figure1_decision.png)
 
-The same reading applies inside an established firm. Teece (2010) treats the business model as the architecture through which a capability is delivered. KAID does not design that architecture. It says whether the innovation record can support a digital one. Foss and Saebi (2017) ask business-model research to specify the change, not only the technology. The change KAID supports is a narrow one: pursue the offer, build training, or stay with the current model.
+Figure 1 is the decision the probability is for. Of 2,932 holdout firm-years, 1,786 fall in Hold and 4.0% of them are ready (3.1–5.0). 487 fall in Develop and 38.4% are ready (33.9–42.5). 659 fall in Prioritize and 64.5% are ready (60.7–68.2). The intervals do not overlap. Relative to Prioritize firms, Hold firms are separated by process innovation: it is absent for 93.5% of Hold firm-years and for 11.8% of Prioritize firm-years. Training is absent for 98.2% of Hold firm-years. Develop firms are separated by training, absent for 72.9% against 29.3% in Prioritize. Inside Prioritize, the routine most often still missing is knowledge creation: 48.0% have neither in-house R&D expenditure nor an R&D department. External R&D is rare in every band and is not used as that recommendation.
 
-## 6. What this evidence does not show
+![Figure 2. Holdout receiver-operating curves. KAID is drawn dashed because it lies on the AI curve: the training weight on the AI layer is 0.95.](figures/figure2_roc.png)
 
-The label is a survey proxy. It is not revenue from a data product, and it is not a completed transformation. The five countries and the years 2009–2016 are the waves in which enough digital markers were asked. A website was on the questionnaire for only a quarter of the estimation sample. Process innovation, under the Oslo Manual, can include support activities, so part of its contribution sits near the label even though the spend items themselves are not predictors. The design is cross-sectional. Training can follow a digital project as well as precede it. The blend does not beat boosting, and a reader who wants only a probability can stop at the AI layer. What that layer will not do is name the routine.
+Process innovation is the strongest single boosting input. Dropping it and refitting the AI layer leaves a holdout AUC of 0.852, close to the knowledge layer and still above chance. The gain from 0.852 to 0.891 is the rest of the innovation record, not one item standing alone. On the 1,782 holdout firm-years where cooperation was asked, the main AI model has AUC 0.800, cooperation alone has AUC 0.634, and adding the cooperation item moves AUC from 0.800 to 0.811. Where the question was fielded, cooperation is a real and small increment. It is not safe to impute where the question was omitted.
 
-The microdata are not included here. LAIS is distributed by the Inter-American Development Bank under CC BY-NC-ND 3.0 IGO. The script downloads the public file, rebuilds both figures, and writes the metrics in `results.json`.
+The pattern that matters for a data-centric offer is therefore not a new accuracy record. A linear reading of the innovation survey already carries most of the signal. Boosting adds a tested increment. The blend does not. What the knowledge layer adds, and the probability does not, is the name of the missing routine in Figure 1a. An entrepreneur in Hold is not looking at a close call: about one firm-year in twenty-five is ready, and the process routine is absent. The next spend is that routine. A Develop firm is past the base rate and short of a coin-toss probability; the distinctive gap is training. A Prioritize firm is the candidate for the offer, and about half of those firms still need a place where knowledge is created and kept [4]. That is the decision-support claim. It is narrower than a claim that the blended score is a better classifier, and the holdout does not support the wider claim.
+
+## 5. Limitations
+
+The label is a survey proxy. It is not revenue from a data product, and it is not a completed transformation. The five countries and the years 2009–2016 are the waves in which enough digital markers were asked. A website was on the questionnaire for a quarter of the estimation sample. Process innovation can include support activities under the Oslo Manual [8], so part of its contribution sits near the label even though the spend items themselves are not predictors. The design is cross-sectional. Training can follow a digital project as well as precede it. The bootstrap respects enterprises, not a survey-weighted population, and it does not refit the boosting model inside each replicate; the intervals describe the holdout scores, not the sampling variability of a refitted model. The blend does not beat boosting. A reader who wants only a probability can stop at the AI layer. What that layer will not do is name the routine.
+
+The microdata are not included. LAIS is distributed by the Inter-American Development Bank under CC BY-NC-ND 3.0 IGO. The script downloads the public file, rebuilds both figures, and writes the metrics.
+
+## 6. Conclusion
+
+This Short Communication presented KAID, a knowledge-based AI decision aid that predicts digital-transformation readiness from enterprise innovation data and returns a band rather than only a rank. Across 2,932 holdout firm-years, gradient boosting was the better probability, a logistic model beat an explicit six-rule score, and blending the two probabilities did not help. The bands still separated realized readiness from 4.0% to 64.5%, and each band pointed to a different missing routine: process innovation, training, or knowledge creation.
+
+KAID is a pre-commitment screen for a data-centric offer. It is not a valuation of that offer, and it is not evidence that buying the named routine will cause readiness. Used that way, the negative result on the blend is part of the finding. The probability and the rule answer different questions, and only one of them should be averaged.
+
+## Data availability
+
+The firm microdata are the public LAIS file [9], https://doi.org/10.60966/hbz4-cm10. They are not redistributed. Running `kaid.py` downloads that file, refits every model under seed 42, and regenerates `figures/figure1_decision.png`, `figures/figure2_roc.png`, and `results.json`.
+
+## Declaration of competing interest
+
+The author declares that there are no known competing financial interests or personal relationships that could have appeared to influence the work reported in this manuscript.
+
+## Declaration of generative AI and AI-assisted technologies
+
+During preparation of this manuscript, AI-assisted tools were used for language drafting, code development, and manuscript formatting. The author reviewed the content and takes responsibility for the final manuscript. The tables and figures were generated from the executable analysis and from `results.json`.
+
+## Funding
+
+This research received no specific grant from any funding agency in the public, commercial, or not-for-profit sectors.
+
+## CRediT authorship contribution statement
+
+Sai Vignesh Akkineni: Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Writing – original draft, Writing – review and editing, Visualization.
 
 ## References
 
-Crespi, G., Guillard, C., Salazar, M., & Vargas, F. (2022). *Harmonized Latin American Innovation Surveys Database (LAIS): Firm-level microdata for the study of innovation, 2007–2017*. Inter-American Development Bank. https://doi.org/10.60966/hbz4-cm10
+[1] Vial, G. (2019). Understanding digital transformation: A review and a research agenda. *The Journal of Strategic Information Systems, 28*(2), 118–144. https://doi.org/10.1016/j.jsis.2019.01.003
 
-Foss, N. J., & Saebi, T. (2017). Fifteen years of research on business model innovation: How far have we come, and where should we go? *Journal of Management, 43*(1), 200–227. https://doi.org/10.1177/0149206316675927
+[2] Hartmann, P. M., Zaki, M., Feldmann, N., & Neely, A. (2016). Capturing value from big data – a taxonomy of data-driven business models used by start-up firms. *International Journal of Operations & Production Management, 36*(10), 1382–1406. https://doi.org/10.1108/IJOPM-02-2014-0098
 
-Friedman, J. H. (2001). Greedy function approximation: A gradient boosting machine. *Annals of Statistics, 29*(5), 1189–1232. https://doi.org/10.1214/aos/1013203451
+[3] Nambisan, S. (2017). Digital entrepreneurship: Toward a digital technology perspective of entrepreneurship. *Entrepreneurship Theory and Practice, 41*(6), 1029–1055. https://doi.org/10.1111/etap.12254
 
-Grant, R. M. (1996). Toward a knowledge-based theory of the firm. *Strategic Management Journal, 17*(S2), 109–122. https://doi.org/10.1002/smj.4250171110
+[4] Grant, R. M. (1996). Toward a knowledge-based theory of the firm. *Strategic Management Journal, 17*(S2), 109–122. https://doi.org/10.1002/smj.4250171110
 
-Hartmann, P. M., Zaki, M., Feldmann, N., & Neely, A. (2016). Capturing value from big data – a taxonomy of data-driven business models used by start-up firms. *International Journal of Operations & Production Management, 36*(10), 1382–1406. https://doi.org/10.1108/IJOPM-02-2014-0098
+[5] Kogut, B., & Zander, U. (1992). Knowledge of the firm, combinative capabilities, and the replication of technology. *Organization Science, 3*(3), 383–397. https://doi.org/10.1287/orsc.3.3.383
 
-Kogut, B., & Zander, U. (1992). Knowledge of the firm, combinative capabilities, and the replication of technology. *Organization Science, 3*(3), 383–397. https://doi.org/10.1287/orsc.3.3.383
+[6] Teece, D. J. (2010). Business models, business strategy and innovation. *Long Range Planning, 43*(2–3), 172–194. https://doi.org/10.1016/j.lrp.2009.07.003
 
-Nambisan, S. (2017). Digital entrepreneurship: Toward a digital technology perspective of entrepreneurship. *Entrepreneurship Theory and Practice, 41*(6), 1029–1055. https://doi.org/10.1111/etap.12254
+[7] Foss, N. J., & Saebi, T. (2017). Fifteen years of research on business model innovation: How far have we come, and where should we go? *Journal of Management, 43*(1), 200–227. https://doi.org/10.1177/0149206316675927
 
-OECD/Eurostat. (2018). *Oslo Manual 2018: Guidelines for collecting, reporting and using data on innovation* (4th ed.). OECD Publishing. https://doi.org/10.1787/9789264304604-en
+[8] OECD/Eurostat. (2018). *Oslo Manual 2018: Guidelines for collecting, reporting and using data on innovation* (4th ed.). OECD Publishing. https://doi.org/10.1787/9789264304604-en
 
-Teece, D. J. (2010). Business models, business strategy and innovation. *Long Range Planning, 43*(2–3), 172–194. https://doi.org/10.1016/j.lrp.2009.07.003
+[9] Crespi, G., Guillard, C., Salazar, M., & Vargas, F. (2022). *Harmonized Latin American Innovation Surveys Database (LAIS): Firm-level microdata for the study of innovation, 2007–2017*. Inter-American Development Bank. https://doi.org/10.60966/hbz4-cm10
 
-Vial, G. (2019). Understanding digital transformation: A review and a research agenda. *The Journal of Strategic Information Systems, 28*(2), 118–144. https://doi.org/10.1016/j.jsis.2019.01.003
+[10] Friedman, J. H. (2001). Greedy function approximation: A gradient boosting machine. *Annals of Statistics, 29*(5), 1189–1232. https://doi.org/10.1214/aos/1013203451
