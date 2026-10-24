@@ -6,6 +6,14 @@ Sai Vignesh Akkineni
 
 Doctor of Business Administration candidate
 
+## Highlights
+
+- Readiness is scored from innovation routines, not from digital spend.
+- Boosting holdout AUC is 0.891; the six-rule score is 0.854.
+- Blending the two probabilities does not beat boosting.
+- Hold, Develop, and Prioritize separate realized readiness.
+- Each band names one missing routine for the next spend.
+
 ## Abstract
 
 A firm can buy software and still have no new offer to sell. This Short Communication presents KAID, a knowledge-based artificial-intelligence decision aid that reads an enterprise innovation record and returns one of three actions: hold, develop, or prioritize a digital offer. Six routines from the knowledge-based view are scored explicitly. A gradient-boosting layer estimates the probability of digital-transformation readiness from the same innovation items. The readiness label is built only from digital markers — a website, an informatics and systems department, and software, hardware, and ICT innovation expenditure — and those markers are excluded from the predictors. On the public Latin American innovation surveys, 14,663 firm-years from 12,070 enterprises, a logistic regression reaches a holdout AUC of 0.873, the knowledge layer 0.854, and gradient boosting 0.891 (95% enterprise-bootstrap interval 0.879–0.903). Boosting exceeds the knowledge layer by 0.038 AUC and the logistic model by 0.018 AUC; both contrasts have bootstrap intervals that exclude zero (p < 0.001). Blending the knowledge probability into the boosting probability, with the training weight on boosting equal to 0.95, does not improve on boosting (difference −0.0002; 95% interval −0.0006 to 0.0001; p = 0.223). The decision bands do separate firms. On the holdout, 4.0% of Hold firm-years are ready (95% interval 3.1–5.0), 38.4% of Develop firm-years (33.9–42.5), and 64.5% of Prioritize firm-years (60.7–68.2). Hold is missing process innovation. Develop is missing innovation training. Prioritize still often lacks an R&D routine.
@@ -14,17 +22,17 @@ Keywords: knowledge-based systems; artificial intelligence; enterprise innovatio
 
 ## 1. Introduction
 
-Digital transformation is a change in how a firm creates value, not a purchase of software [1-3]. Data-centric business models depend on an offer a customer will pay for [4]. Analytics-capability studies find the association with performance running through dynamic, operational, or entrepreneurial capabilities, and through the management of the analytics capability itself [5-9]. Platform studies of cross-border e-commerce likewise place data elements inside the link from transformation to enterprise performance [10]. Digital entrepreneurship is the decision to pursue that offer [11]. Among born-digital small and medium-sized enterprises, performance has been associated with dynamic capabilities and collaborative innovation rather than with possession of the technology alone [12]. None of those results tells a manager whether this firm, with this innovation record, should spend the next budget on a digital product.
+Digital transformation is a change in how a firm creates value, not a purchase of software (Gong & Ribiere, 2021; Verhoef et al., 2021; Vial, 2019). Data-centric business models depend on an offer a customer will pay for (Hartmann et al., 2016). Analytics-capability studies find the association with performance running through dynamic, operational, or entrepreneurial capabilities, and through the management of the analytics capability itself (Ciampi et al., 2021; Fosso Wamba et al., 2017; Mikalef et al., 2020; Song et al., 2024; Wu et al., 2024). Platform studies of cross-border e-commerce likewise place data elements inside the link from transformation to enterprise performance (Yang et al., 2023). Digital entrepreneurship is the decision to pursue that offer (Nambisan, 2017). Among born-digital small and medium-sized enterprises, performance has been associated with dynamic capabilities and collaborative innovation rather than with possession of the technology alone (Pundziene & Geryba, 2024). None of those results tells a manager whether this firm, with this innovation record, should spend the next budget on a digital product.
 
-The knowledge-based view treats the firm as an institution that integrates specialist knowledge into a routine that can be used [13,14]. An artificial-intelligence output is another specialist product. Reviews of artificial intelligence in innovation management treat the model as an input to the innovation process [15,16], and the conversion of an AI capability into a business model is described as a co-evolutionary process [17]. The output changes what the firm sells only when the surrounding routines can carry it [18,19]. Case and review work describes digital transformation itself as a continuing renewal of dynamic capabilities [20-22]. Readiness for that renewal is discussed as a multidimensional state, covering technological resources, business processes, management capability, human capability, and culture, and it is not settled by a single technology indicator [23]. The practical question is therefore prior to model choice: which innovation routines are present, and is that record sufficient to treat the firm as ready.
+The knowledge-based view treats the firm as an institution that integrates specialist knowledge into a routine that can be used (Grant, 1996; Kogut & Zander, 1992). An artificial-intelligence output is another specialist product. Reviews of artificial intelligence in innovation management treat the model as an input to the innovation process (Haefner et al., 2021; Mariani et al., 2023), and the conversion of an AI capability into a business model is described as a co-evolutionary process (Sjödin et al., 2021). The output changes what the firm sells only when the surrounding routines can carry it (Foss & Saebi, 2017; Teece, 2010). Case and review work describes digital transformation itself as a continuing renewal of dynamic capabilities (Schneider et al., 2024; Warner & Wäger, 2019; Wohlleber et al., 2024). Readiness for that renewal is discussed as a multidimensional state, covering technological resources, business processes, management capability, human capability, and culture, and it is not settled by a single technology indicator (Michelotto & Joia, 2024). The practical question is therefore prior to model choice: which innovation routines are present, and is that record sufficient to treat the firm as ready.
 
-The joint literature on digital transformation and innovation is already large [24,25]. It links transformation to the balance of exploitative and exploratory innovation [26] and frames it as a springboard for product, process, and business-model innovation, including servitization of a product firm [27-29]. A multidisciplinary agenda for artificial intelligence asks for organizational consequences, not only for a higher score [30], and adoption studies in manufacturing locate take-up in technological, organizational, and environmental conditions [31]. What that literature does not hand a manager is a tested screen on an innovation record: a probability, and the name of the routine the next budget would have to supply.
+The joint literature on digital transformation and innovation is already large (Gao et al., 2022; Kraus et al., 2022). It links transformation to the balance of exploitative and exploratory innovation (Liang & Li, 2024) and frames it as a springboard for product, process, and business-model innovation, including servitization of a product firm (Bresciani et al., 2021; Frank et al., 2019; Paiola & Gebauer, 2020). A multidisciplinary agenda for artificial intelligence asks for organizational consequences, not only for a higher score (Dwivedi et al., 2021), and adoption studies in manufacturing locate take-up in technological, organizational, and environmental conditions (Chatterjee et al., 2021). What that literature does not hand a manager is a tested screen on an innovation record: a probability, and the name of the routine the next budget would have to supply.
 
 This paper proposes KAID, a knowledge-based AI decision-support model for that question. Unlike a black-box classifier that stops at a probability, KAID keeps the routines visible and ties each decision band to the routine that separates it from firms judged ready to proceed. The contribution is threefold: (i) a readiness label constructed only from digital markers, so the innovation predictors are not scored against themselves; (ii) an explicit six-rule knowledge layer coupled to gradient boosting, with the coupling weight chosen on training data and then frozen; and (iii) a reproducible enterprise-level holdout with a linear baseline, bootstrap intervals, and paired contrasts, so the claim that one layer adds something can be checked rather than asserted.
 
 KAID differs from a scorecard of innovation inputs in two structural ways. The knowledge layer is a small production-rule base: each routine fires or it does not, and the score is the share of routines that fire (Section 2.2). The AI layer does not replace those rules. It estimates a probability from the same items, and the decision layer uses that probability for the band while the rules name what is missing (Section 2.3). Section 4 separates those roles. The boosting layer is the better probability. The rules are the explanation. Averaging them does not produce a third, better probability.
 
-## 2. Proposed KAID Framework
+## 2. Proposed KAID framework
 
 ### 2.1 Readiness label
 
@@ -38,7 +46,7 @@ Firm-years with fewer than three observed markers are excluded, because the labe
 
 ### 2.2 Knowledge-rule layer
 
-The knowledge layer is a production-rule base R = {r1, …, r6}, evaluated once per firm-year. A rule fires when any of its observed survey items equals 1. If every item for that rule is missing, the rule is missing and is left out of the share. The six rules, in the order used by the code, are knowledge creation (in-house R&D expenditure or a formal R&D department), external knowledge (external R&D expenditure), training for innovation, organizational integration (organizational innovation), product innovation, and process innovation. Innovation items follow the Oslo Manual [32].
+The knowledge layer is a production-rule base R = {r1, …, r6}, evaluated once per firm-year. A rule fires when any of its observed survey items equals 1. If every item for that rule is missing, the rule is missing and is left out of the share. The six rules, in the order used by the code, are knowledge creation (in-house R&D expenditure or a formal R&D department), external knowledge (external R&D expenditure), training for innovation, organizational integration (organizational innovation), product innovation, and process innovation. Innovation items follow the Oslo Manual (OECD/Eurostat, 2018).
 
 The raw knowledge score is the share of observed rules that fire, given by Eq. (2),
 
@@ -52,7 +60,7 @@ Two candidate rules were specified and then removed from the main model. Innovat
 
 ### 2.3 AI layer and the decision score
 
-The AI layer is histogram gradient boosting [33] on the survey items inside the six rules, plus marketing innovation, foreign ownership, group membership, log employment, country, year, and sector. Missing answers on items that were asked of nearly every firm stay missing; the trees may use that missingness. Country, year, and sector are one-hot encoded from the training sample only.
+The AI layer is histogram gradient boosting (Friedman, 2001) on the survey items inside the six rules, plus marketing innovation, foreign ownership, group membership, log employment, country, year, and sector. Missing answers on items that were asked of nearly every firm stay missing; the trees may use that missingness. Country, year, and sector are one-hot encoded from the training sample only.
 
 Let P_i be the boosting probability. The KAID score is given by Eq. (3),
 
@@ -88,9 +96,9 @@ Output: band and the routine the band points to.
 
 Fixed seeds make the split, the boosting fit, and the bootstrap reproducible from the accompanying code.
 
-## 3. Experimental Design
+## 3. Experimental design
 
-The source is the public Harmonized Latin American Innovation Surveys database, LAIS [34]. The estimation rule in Eq. (1) keeps 14,663 firm-years and 12,070 enterprises in Ecuador, El Salvador, Panama, Paraguay, and Peru, in 2009, 2012, 2013, 2014, 2015, and 2016. The ready share is 23.6%. Software, hardware, and ICT expenditure were asked of every retained firm-year. The informatics department was asked of 90.6%, and a website of 25.8%, so the label is a digital-spend and digital-organization bundle, with the website used where the survey asked it. Software and hardware expenditure sit close to the ICT item in these questionnaires; the label is that bundle, not five independent technologies.
+The source is the public Harmonized Latin American Innovation Surveys database, LAIS (Crespi et al., 2022). The estimation rule in Eq. (1) keeps 14,663 firm-years and 12,070 enterprises in Ecuador, El Salvador, Panama, Paraguay, and Peru, in 2009, 2012, 2013, 2014, 2015, and 2016. The ready share is 23.6%. Software, hardware, and ICT expenditure were asked of every retained firm-year. The informatics department was asked of 90.6%, and a website of 25.8%, so the label is a digital-spend and digital-organization bundle, with the website used where the survey asked it. Software and hardware expenditure sit close to the ICT item in these questionnaires; the label is that bundle, not five independent technologies.
 
 Among retained firms the six routines fire at the following rates: knowledge creation 19.9%, external R&D 6.0%, training 21.3%, organizational innovation 27.9%, product innovation 32.0%, and process innovation 34.9%. A website, where asked, is reported by 50.5% of firms. An informatics department, where asked, is reported by 33.0%. Software, hardware, and ICT expenditure are reported by 18.5%, 16.7%, and 24.1%.
 
@@ -98,7 +106,7 @@ The holdout is a group split of 20% of enterprises, seed 42. The training sample
 
 Uncertainty is an enterprise bootstrap with 2,000 replicates and the same seed family as the split. Each replicate draws holdout enterprises with replacement and keeps every firm-year of a drawn enterprise. AUC intervals and paired AUC differences are computed on those replicates. A two-sided bootstrap p-value is twice the smaller share of replicates in which the difference is positive or negative. When no replicate changes sign, the reported result is p < 0.001. The same resampling gives the intervals on the band-specific ready rates in Figure 1.
 
-## 4. Results and Discussion
+## 4. Results and discussion
 
 Table 1 is the holdout comparison. Logistic regression reaches AUC 0.873 (95% interval 0.860–0.887). The six-rule knowledge layer reaches 0.854 (0.840–0.867). Gradient boosting reaches 0.891 (0.879–0.903). KAID reaches 0.891 (0.878–0.903). The Brier score moves in the same direction: 0.120, 0.125, 0.110, and 0.110. Mean predicted probability on the holdout is 0.237 for boosting and 0.237 for KAID, against a ready rate of 0.233, so the probabilities sit on the scale of the outcome. The Prioritize cut of 0.50 is therefore a high bar relative to the base rate, not a cut that merely recovers the sample prevalence.
 
@@ -136,13 +144,13 @@ Figure 1 is the decision the probability is for. Of 2,932 holdout firm-years, 1,
 
 Figure 2. Holdout receiver-operating curves. KAID is drawn dashed because it lies on the AI curve: the training weight on the AI layer is 0.95.
 
-Process innovation is the strongest single boosting input. Dropping it and refitting the AI layer leaves a holdout AUC of 0.852, close to the knowledge layer and still above chance. The gain from 0.852 to 0.891 is the rest of the innovation record, not one item standing alone. On the 1,782 holdout firm-years where cooperation was asked, the main AI model has AUC 0.800, cooperation alone has AUC 0.634, and adding the cooperation item moves AUC from 0.800 to 0.811. Where the question was fielded, cooperation is a real and small increment. Research on enterprise innovation capability treats cooperative culture as one condition accompanying digital transformation [35]. That literature does not justify imputing a cooperation answer where the question was omitted.
+Process innovation is the strongest single boosting input. Dropping it and refitting the AI layer leaves a holdout AUC of 0.852, close to the knowledge layer and still above chance. The gain from 0.852 to 0.891 is the rest of the innovation record, not one item standing alone. On the 1,782 holdout firm-years where cooperation was asked, the main AI model has AUC 0.800, cooperation alone has AUC 0.634, and adding the cooperation item moves AUC from 0.800 to 0.811. Where the question was fielded, cooperation is a real and small increment. Research on enterprise innovation capability treats cooperative culture as one condition accompanying digital transformation (Liu et al., 2025). That literature does not justify imputing a cooperation answer where the question was omitted.
 
-The pattern that matters for a data-centric offer is therefore not a new accuracy record. A linear reading of the innovation survey already carries most of the signal. Boosting adds a tested increment. The blend does not. What the knowledge layer adds, and the probability does not, is the name of the missing routine in Figure 1, panel (a). An entrepreneur in Hold is not looking at a close call: about one firm-year in twenty-five is ready, and the process routine is absent. The next spend is that routine. A Develop firm is past the base rate and short of a coin-toss probability; the distinctive gap is training. A Prioritize firm is the candidate for the offer, and about half of those firms still need a place where knowledge is created and kept [13]. That is the decision-support claim. It is narrower than a claim that the blended score is a better classifier, and the holdout does not support the wider claim.
+The pattern that matters for a data-centric offer is therefore not a new accuracy record. A linear reading of the innovation survey already carries most of the signal. Boosting adds a tested increment. The blend does not. What the knowledge layer adds, and the probability does not, is the name of the missing routine in Figure 1, panel (a). An entrepreneur in Hold is not looking at a close call: about one firm-year in twenty-five is ready, and the process routine is absent. The next spend is that routine. A Develop firm is past the base rate and short of a coin-toss probability; the distinctive gap is training. A Prioritize firm is the candidate for the offer, and about half of those firms still need a place where knowledge is created and kept (Grant, 1996). That is the decision-support claim. It is narrower than a claim that the blended score is a better classifier, and the holdout does not support the wider claim.
 
 ## 5. Limitations
 
-The label is a survey proxy. It is not revenue from a data product, and it is not a completed transformation. Organizational digital-transformation readiness, as reviewed in the literature, also includes management capability, human capability, and culture [23]. Those dimensions are not in the five markers. The five countries and the years 2009–2016 are the waves in which enough digital markers were asked. A website was on the questionnaire for a quarter of the estimation sample. Process innovation can include support activities under the Oslo Manual [32], so part of its contribution sits near the label even though the spend items themselves are not predictors. The design is cross-sectional. Training can follow a digital project as well as precede it. The bootstrap respects enterprises, not a survey-weighted population, and it does not refit the boosting model inside each replicate; the intervals describe the holdout scores, not the sampling variability of a refitted model. The blend does not beat boosting. A reader who wants only a probability can stop at the AI layer. What that layer will not do is name the routine.
+The label is a survey proxy. It is not revenue from a data product, and it is not a completed transformation. Organizational digital-transformation readiness, as reviewed in the literature, also includes management capability, human capability, and culture (Michelotto & Joia, 2024). Those dimensions are not in the five markers. The five countries and the years 2009–2016 are the waves in which enough digital markers were asked. A website was on the questionnaire for a quarter of the estimation sample. Process innovation can include support activities under the Oslo Manual (OECD/Eurostat, 2018), so part of its contribution sits near the label even though the spend items themselves are not predictors. The design is cross-sectional. Training can follow a digital project as well as precede it. The bootstrap respects enterprises, not a survey-weighted population, and it does not refit the boosting model inside each replicate; the intervals describe the holdout scores, not the sampling variability of a refitted model. The blend does not beat boosting. A reader who wants only a probability can stop at the AI layer. What that layer will not do is name the routine.
 
 The microdata are not included. LAIS is distributed by the Inter-American Development Bank under CC BY-NC-ND 3.0 IGO. The script downloads the public file, rebuilds both figures, and writes the metrics.
 
@@ -152,15 +160,15 @@ This Short Communication presented KAID, a knowledge-based AI decision aid that 
 
 KAID is a pre-commitment screen for a data-centric offer. It is not a valuation of that offer, and it is not evidence that buying the named routine will cause readiness. Used that way, the negative result on the blend is part of the finding. The probability and the rule answer different questions, and only one of them should be averaged.
 
-## Data Availability
+## CRediT authorship contribution statement
 
-The firm microdata are the public LAIS file [34], https://doi.org/10.60966/hbz4-cm10. No new data were collected from human participants, and no identifiable firm record is reported. The microdata are not redistributed. Running `kaid.py` downloads that file, refits every model under seed 42, and regenerates `figures/figure1_decision.png`, `figures/figure2_roc.png`, and `results.json`.
+Sai Vignesh Akkineni: Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Writing - original draft, Writing - review and editing, Visualization.
 
-## Declaration of Competing Interest
+## Declaration of competing interest
 
 The author declares that there are no known competing financial interests or personal relationships that could have appeared to influence the work reported in this manuscript.
 
-## Declaration of Generative AI and AI-Assisted Technologies
+## Declaration of generative AI and AI-assisted technologies
 
 During preparation of this manuscript, AI-assisted tools were used for language drafting, editing, organization, and manuscript formatting support. The author reviewed and edited the content and takes full responsibility for the final manuscript. The tables and figures were generated from the executable analysis and from `results.json`.
 
@@ -168,78 +176,78 @@ During preparation of this manuscript, AI-assisted tools were used for language 
 
 This research received no specific grant from any funding agency in the public, commercial, or not-for-profit sectors.
 
-## CRediT Authorship Contribution Statement
+## Data availability
 
-Sai Vignesh Akkineni: Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Writing - original draft, Writing - review and editing, Visualization.
+The firm microdata are the public LAIS file (Crespi et al., 2022), https://doi.org/10.60966/hbz4-cm10. No new data were collected from human participants, and no identifiable firm record is reported. The microdata are not redistributed. Running `kaid.py` downloads that file, refits every model under seed 42, and regenerates `figures/figure1_decision.png`, `figures/figure2_roc.png`, and `results.json`.
 
 ## References
 
-[1] Gong, C., & Ribiere, V. (2021). Developing a unified definition of digital transformation. Technovation, 102, 102217. https://doi.org/10.1016/j.technovation.2020.102217
+Bresciani, S., Huarng, K.-H., Malhotra, A., & Ferraris, A. (2021). Digital transformation as a springboard for product, process and business model innovation. *Journal of Business Research, 128*, 204–210. https://doi.org/10.1016/j.jbusres.2021.02.003
 
-[2] Verhoef, P. C., Broekhuizen, T., Bart, Y., et al. (2021). Digital transformation: A multidisciplinary reflection and research agenda. Journal of Business Research, 122, 889-901. https://doi.org/10.1016/j.jbusres.2019.09.022
+Chatterjee, S., Rana, N. P., Dwivedi, Y. K., & Baabdullah, A. M. (2021). Understanding AI adoption in manufacturing and production firms using an integrated TAM-TOE model. *Technological Forecasting and Social Change, 170*, Article 120880. https://doi.org/10.1016/j.techfore.2021.120880
 
-[3] Vial, G. (2019). Understanding digital transformation: A review and a research agenda. The Journal of Strategic Information Systems, 28(2), 118-144. https://doi.org/10.1016/j.jsis.2019.01.003
+Ciampi, F., Demi, S., Magrini, A., Marzi, G., & Papa, A. (2021). Exploring the impact of big data analytics capabilities on business model innovation: The mediating role of entrepreneurial orientation. *Journal of Business Research, 123*, 1–13. https://doi.org/10.1016/j.jbusres.2020.09.023
 
-[4] Hartmann, P. M., Zaki, M., Feldmann, N., et al. (2016). Capturing value from big data – a taxonomy of data-driven business models used by start-up firms. International Journal of Operations & Production Management, 36(10), 1382-1406. https://doi.org/10.1108/IJOPM-02-2014-0098
+Crespi, G., Guillard, C., Salazar, M., & Vargas, F. (2022). *Harmonized Latin American Innovation Surveys database (LAIS): Firm-level microdata for the study of innovation, 2007–2017* [Data set]. Inter-American Development Bank. https://doi.org/10.60966/hbz4-cm10
 
-[5] Ciampi, F., Demi, S., Magrini, A., et al. (2021). Exploring the impact of big data analytics capabilities on business model innovation: The mediating role of entrepreneurial orientation. Journal of Business Research, 123, 1-13. https://doi.org/10.1016/j.jbusres.2020.09.023
+Dwivedi, Y. K., Hughes, L., Ismagilova, E., Aarts, G., Coombs, C., Crick, T., Duan, Y., Dwivedi, R., Edwards, J., Eirug, A., Galanos, V., Ilavarasan, P. V., Janssen, M., Jones, P., Kar, A. K., Kizgin, H., Kronemann, B., Lal, B., Lucini, B., ... Williams, M. D. (2021). Artificial intelligence (AI): Multidisciplinary perspectives on emerging challenges, opportunities, and agenda for research, practice and policy. *International Journal of Information Management, 57*, Article 101994. https://doi.org/10.1016/j.ijinfomgt.2019.08.002
 
-[6] Fosso Wamba, S., Gunasekaran, A., Akter, S., et al. (2017). Big data analytics and firm performance: Effects of dynamic capabilities. Journal of Business Research, 70, 356-365. https://doi.org/10.1016/j.jbusres.2016.08.009
+Foss, N. J., & Saebi, T. (2017). Fifteen years of research on business model innovation: How far have we come, and where should we go? *Journal of Management, 43*(1), 200–227. https://doi.org/10.1177/0149206316675927
 
-[7] Mikalef, P., Krogstie, J., Pappas, I. O., et al. (2020). Exploring the relationship between big data analytics capability and competitive performance: The mediating roles of dynamic and operational capabilities. Information & Management, 57(2), 103169. https://doi.org/10.1016/j.im.2019.05.004
+Fosso Wamba, S., Gunasekaran, A., Akter, S., Ren, S. J., Dubey, R., & Childe, S. J. (2017). Big data analytics and firm performance: Effects of dynamic capabilities. *Journal of Business Research, 70*, 356–365. https://doi.org/10.1016/j.jbusres.2016.08.009
 
-[8] Song, J., Xiang, Y., Huang, B., et al. (2024). Exploring how big data analytics management capability fuel market performance: Evidence from a mediated moderation model. IEEE Transactions on Engineering Management, 71, 9080-9093. https://doi.org/10.1109/TEM.2023.3312774
+Frank, A. G., Mendes, G. H. S., Ayala, N. F., & Ghezzi, A. (2019). Servitization and Industry 4.0 convergence in the digital transformation of product firms: A business model innovation perspective. *Technological Forecasting and Social Change, 141*, 341–351. https://doi.org/10.1016/j.techfore.2019.01.014
 
-[9] Wu, D., Lin, X., Gupta, S., et al. (2024). Big data analytics capability, dynamic capability, and firm performance: The moderating effect of IT–business strategic alignment. IEEE Transactions on Engineering Management, 71, 11638-11651. https://doi.org/10.1109/TEM.2024.3429648
+Friedman, J. H. (2001). Greedy function approximation: A gradient boosting machine. *The Annals of Statistics, 29*(5), 1189–1232. https://doi.org/10.1214/aos/1013203451
 
-[10] Yang, Y., Chen, N., & Chen, H. (2023). The digital platform, enterprise digital transformation, and enterprise performance of cross-border e-commerce—From the perspective of digital transformation and data elements. Journal of Theoretical and Applied Electronic Commerce Research, 18(2), 777-794. https://doi.org/10.3390/jtaer18020040
+Gao, P., Wu, W., & Yang, Y. (2022). Discovering themes and trends in digital transformation and innovation research. *Journal of Theoretical and Applied Electronic Commerce Research, 17*(3), 1162–1184. https://doi.org/10.3390/jtaer17030059
 
-[11] Nambisan, S. (2017). Digital entrepreneurship: Toward a digital technology perspective of entrepreneurship. Entrepreneurship Theory and Practice, 41(6), 1029-1055. https://doi.org/10.1111/etap.12254
+Gong, C., & Ribiere, V. (2021). Developing a unified definition of digital transformation. *Technovation, 102*, Article 102217. https://doi.org/10.1016/j.technovation.2020.102217
 
-[12] Pundziene, A., & Geryba, L. (2024). Managing technological innovation: Dynamic capabilities, collaborative innovation, and born-digital SMEs' performance. IEEE Transactions on Engineering Management, 71, 6968-6981. https://doi.org/10.1109/TEM.2023.3281722
+Grant, R. M. (1996). Toward a knowledge-based theory of the firm. *Strategic Management Journal, 17*(S2), 109–122. https://doi.org/10.1002/smj.4250171110
 
-[13] Grant, R. M. (1996). Toward a knowledge-based theory of the firm. Strategic Management Journal, 17(S2), 109-122. https://doi.org/10.1002/smj.4250171110
+Haefner, N., Wincent, J., Parida, V., & Gassmann, O. (2021). Artificial intelligence and innovation management: A review, framework, and research agenda. *Technological Forecasting and Social Change, 162*, Article 120392. https://doi.org/10.1016/j.techfore.2020.120392
 
-[14] Kogut, B., & Zander, U. (1992). Knowledge of the firm, combinative capabilities, and the replication of technology. Organization Science, 3(3), 383-397. https://doi.org/10.1287/orsc.3.3.383
+Hartmann, P. M., Zaki, M., Feldmann, N., & Neely, A. (2016). Capturing value from big data – a taxonomy of data-driven business models used by start-up firms. *International Journal of Operations & Production Management, 36*(10), 1382–1406. https://doi.org/10.1108/IJOPM-02-2014-0098
 
-[15] Haefner, N., Wincent, J., Parida, V., et al. (2021). Artificial intelligence and innovation management: A review, framework, and research agenda. Technological Forecasting and Social Change, 162, 120392. https://doi.org/10.1016/j.techfore.2020.120392
+Kogut, B., & Zander, U. (1992). Knowledge of the firm, combinative capabilities, and the replication of technology. *Organization Science, 3*(3), 383–397. https://doi.org/10.1287/orsc.3.3.383
 
-[16] Mariani, M. M., Machado, I., Magrelli, V., et al. (2023). Artificial intelligence in innovation research: A systematic review, conceptual framework, and future research directions. Technovation, 122, 102623. https://doi.org/10.1016/j.technovation.2022.102623
+Kraus, S., Durst, S., Ferreira, J. J., Veiga, P., Kailer, N., & Weinmann, A. (2022). Digital transformation in business and management research: An overview of the current status quo. *International Journal of Information Management, 63*, Article 102466. https://doi.org/10.1016/j.ijinfomgt.2021.102466
 
-[17] Sjödin, D., Parida, V., Palmié, M., et al. (2021). How AI capabilities enable business model innovation: Scaling AI through co-evolutionary processes and feedback loops. Journal of Business Research, 134, 574-587. https://doi.org/10.1016/j.jbusres.2021.05.009
+Liang, R., & Li, Y. (2024). How digital transformation affects exploitative and exploratory innovation: An innovation structure perspective. *IEEE Transactions on Engineering Management, 71*, 10912–10923. https://doi.org/10.1109/TEM.2024.3408322
 
-[18] Foss, N. J., & Saebi, T. (2017). Fifteen years of research on business model innovation: How far have we come, and where should we go? Journal of Management, 43(1), 200-227. https://doi.org/10.1177/0149206316675927
+Liu, T., Leng, J., Zhu, S., & Fu, R. (2025). Digital transformation and enterprise innovation capability: From the perspectives of enterprise cooperative culture and innovative culture. *Journal of Theoretical and Applied Electronic Commerce Research, 20*(2), Article 136. https://doi.org/10.3390/jtaer20020136
 
-[19] Teece, D. J. (2010). Business models, business strategy and innovation. Long Range Planning, 43(2-3), 172-194. https://doi.org/10.1016/j.lrp.2009.07.003
+Mariani, M. M., Machado, I., Magrelli, V., & Dwivedi, Y. K. (2023). Artificial intelligence in innovation research: A systematic review, conceptual framework, and future research directions. *Technovation, 122*, Article 102623. https://doi.org/10.1016/j.technovation.2022.102623
 
-[20] Schneider, M. H. G., Kanbach, D. K., Kraus, S., et al. (2024). Transform me if you can: Leveraging dynamic capabilities to manage digital transformation. IEEE Transactions on Engineering Management, 71, 9094-9108. https://doi.org/10.1109/TEM.2023.3319406
+Michelotto, F., & Joia, L. A. (2024). Organizational digital transformation readiness: An exploratory investigation. *Journal of Theoretical and Applied Electronic Commerce Research, 19*(4), 3283–3304. https://doi.org/10.3390/jtaer19040159
 
-[21] Warner, K. S. R., & Wäger, M. (2019). Building dynamic capabilities for digital transformation: An ongoing process of strategic renewal. Long Range Planning, 52(3), 326-349. https://doi.org/10.1016/j.lrp.2018.12.001
+Mikalef, P., Krogstie, J., Pappas, I. O., & Pavlou, P. A. (2020). Exploring the relationship between big data analytics capability and competitive performance: The mediating roles of dynamic and operational capabilities. *Information & Management, 57*(2), Article 103169. https://doi.org/10.1016/j.im.2019.05.004
 
-[22] Wohlleber, A. J., Bock, M., Birkel, H., et al. (2024). Implementing vital dynamic capabilities to succeed in digital transformation: A multiple-case study in maritime container shipping. IEEE Transactions on Engineering Management, 71, 13627-13645. https://doi.org/10.1109/TEM.2022.3201770
+Nambisan, S. (2017). Digital entrepreneurship: Toward a digital technology perspective of entrepreneurship. *Entrepreneurship Theory and Practice, 41*(6), 1029–1055. https://doi.org/10.1111/etap.12254
 
-[23] Michelotto, F., & Joia, L. A. (2024). Organizational digital transformation readiness: An exploratory investigation. Journal of Theoretical and Applied Electronic Commerce Research, 19(4), 3283-3304. https://doi.org/10.3390/jtaer19040159
+OECD/Eurostat. (2018). *Oslo Manual 2018: Guidelines for collecting, reporting and using data on innovation* (4th ed.). OECD Publishing. https://doi.org/10.1787/9789264304604-en
 
-[24] Gao, P., Wu, W., & Yang, Y. (2022). Discovering themes and trends in digital transformation and innovation research. Journal of Theoretical and Applied Electronic Commerce Research, 17(3), 1162-1184. https://doi.org/10.3390/jtaer17030059
+Paiola, M., & Gebauer, H. (2020). Internet of things technologies, digital servitization and business model innovation in BtoB manufacturing firms. *Industrial Marketing Management, 89*, 245–264. https://doi.org/10.1016/j.indmarman.2020.03.009
 
-[25] Kraus, S., Durst, S., Ferreira, J. J., et al. (2022). Digital transformation in business and management research: An overview of the current status quo. International Journal of Information Management, 63, 102466. https://doi.org/10.1016/j.ijinfomgt.2021.102466
+Pundziene, A., & Geryba, L. (2024). Managing technological innovation: Dynamic capabilities, collaborative innovation, and born-digital SMEs' performance. *IEEE Transactions on Engineering Management, 71*, 6968–6981. https://doi.org/10.1109/TEM.2023.3281722
 
-[26] Liang, R., & Li, Y. (2024). How digital transformation affects exploitative and exploratory innovation: An innovation structure perspective. IEEE Transactions on Engineering Management, 71, 10912-10923. https://doi.org/10.1109/TEM.2024.3408322
+Schneider, M. H. G., Kanbach, D. K., Kraus, S., & Dabić, M. (2024). Transform me if you can: Leveraging dynamic capabilities to manage digital transformation. *IEEE Transactions on Engineering Management, 71*, 9094–9108. https://doi.org/10.1109/TEM.2023.3319406
 
-[27] Bresciani, S., Huarng, K.-H., Malhotra, A., et al. (2021). Digital transformation as a springboard for product, process and business model innovation. Journal of Business Research, 128, 204-210. https://doi.org/10.1016/j.jbusres.2021.02.003
+Sjödin, D., Parida, V., Palmié, M., & Wincent, J. (2021). How AI capabilities enable business model innovation: Scaling AI through co-evolutionary processes and feedback loops. *Journal of Business Research, 134*, 574–587. https://doi.org/10.1016/j.jbusres.2021.05.009
 
-[28] Frank, A. G., Mendes, G. H. S., Ayala, N. F., et al. (2019). Servitization and Industry 4.0 convergence in the digital transformation of product firms: A business model innovation perspective. Technological Forecasting and Social Change, 141, 341-351. https://doi.org/10.1016/j.techfore.2019.01.014
+Song, J., Xiang, Y., Huang, B., Xie, Y., & Li, Y. (2024). Exploring how big data analytics management capability fuel market performance: Evidence from a mediated moderation model. *IEEE Transactions on Engineering Management, 71*, 9080–9093. https://doi.org/10.1109/TEM.2023.3312774
 
-[29] Paiola, M., & Gebauer, H. (2020). Internet of things technologies, digital servitization and business model innovation in BtoB manufacturing firms. Industrial Marketing Management, 89, 245-264. https://doi.org/10.1016/j.indmarman.2020.03.009
+Teece, D. J. (2010). Business models, business strategy and innovation. *Long Range Planning, 43*(2–3), 172–194. https://doi.org/10.1016/j.lrp.2009.07.003
 
-[30] Dwivedi, Y. K., Hughes, L., Ismagilova, E., et al. (2021). Artificial intelligence (AI): Multidisciplinary perspectives on emerging challenges, opportunities, and agenda for research, practice and policy. International Journal of Information Management, 57, 101994. https://doi.org/10.1016/j.ijinfomgt.2019.08.002
+Verhoef, P. C., Broekhuizen, T., Bart, Y., Bhattacharya, A., Dong, J. Q., Fabian, N., & Haenlein, M. (2021). Digital transformation: A multidisciplinary reflection and research agenda. *Journal of Business Research, 122*, 889–901. https://doi.org/10.1016/j.jbusres.2019.09.022
 
-[31] Chatterjee, S., Rana, N. P., Dwivedi, Y. K., et al. (2021). Understanding AI adoption in manufacturing and production firms using an integrated TAM-TOE model. Technological Forecasting and Social Change, 170, 120880. https://doi.org/10.1016/j.techfore.2021.120880
+Vial, G. (2019). Understanding digital transformation: A review and a research agenda. *The Journal of Strategic Information Systems, 28*(2), 118–144. https://doi.org/10.1016/j.jsis.2019.01.003
 
-[32] OECD/Eurostat. (2018). Oslo Manual 2018: Guidelines for collecting, reporting and using data on innovation (4th ed.). OECD Publishing. https://doi.org/10.1787/9789264304604-en
+Warner, K. S. R., & Wäger, M. (2019). Building dynamic capabilities for digital transformation: An ongoing process of strategic renewal. *Long Range Planning, 52*(3), 326–349. https://doi.org/10.1016/j.lrp.2018.12.001
 
-[33] Friedman, J. H. (2001). Greedy function approximation: A gradient boosting machine. The Annals of Statistics, 29(5), 1189-1232. https://doi.org/10.1214/aos/1013203451
+Wohlleber, A. J., Bock, M., Birkel, H., & Hartmann, E. (2024). Implementing vital dynamic capabilities to succeed in digital transformation: A multiple-case study in maritime container shipping. *IEEE Transactions on Engineering Management, 71*, 13627–13645. https://doi.org/10.1109/TEM.2022.3201770
 
-[34] Crespi, G., Guillard, C., Salazar, M., & Vargas, F. (2022). Harmonized Latin American Innovation Surveys database (LAIS): Firm-level microdata for the study of innovation, 2007-2017. Inter-American Development Bank. https://doi.org/10.60966/hbz4-cm10
+Wu, D., Lin, X., Gupta, S., & Kar, A. K. (2024). Big data analytics capability, dynamic capability, and firm performance: The moderating effect of IT–business strategic alignment. *IEEE Transactions on Engineering Management, 71*, 11638–11651. https://doi.org/10.1109/TEM.2024.3429648
 
-[35] Liu, T., Leng, J., Zhu, S., et al. (2025). Digital transformation and enterprise innovation capability: From the perspectives of enterprise cooperative culture and innovative culture. Journal of Theoretical and Applied Electronic Commerce Research, 20(2), 136. https://doi.org/10.3390/jtaer20020136
+Yang, Y., Chen, N., & Chen, H. (2023). The digital platform, enterprise digital transformation, and enterprise performance of cross-border e-commerce—From the perspective of digital transformation and data elements. *Journal of Theoretical and Applied Electronic Commerce Research, 18*(2), 777–794. https://doi.org/10.3390/jtaer18020040
