@@ -105,6 +105,20 @@
       "share_observed": 1.0
     }
   ],
+  "fielding": [
+    {
+      "item": "cooperation",
+      "share_not_asked": 0.3918024960785651,
+      "n_not_asked": 5745,
+      "ready_rate_when_not_asked": 0.0006962576153176675
+    },
+    {
+      "item": "internet_as_source",
+      "share_not_asked": 0.5139466684853031,
+      "n_not_asked": 7536,
+      "ready_rate_when_not_asked": 0.028397027600849258
+    }
+  ],
   "weight_on_ai": 0.9500000000000001,
   "thresholds": {
     "logistic_f1": 0.2,

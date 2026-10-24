@@ -147,13 +147,14 @@ def load_sample(path: Path) -> pd.DataFrame:
         "isic4_1d",
         "empl_Y3",
         "coop",
+        "dinfo_net",
         *DIGITAL,
         *AI_NUMERIC,
     ]
     # log_empl is constructed; empl_Y3 is the source.
     columns = [c for c in columns if c != "log_empl"]
     frame = pd.read_csv(path, usecols=columns, low_memory=False)
-    for column in ["coop", *DIGITAL, *[c for c in AI_NUMERIC if c != "log_empl"]]:
+    for column in ["coop", "dinfo_net", *DIGITAL, *[c for c in AI_NUMERIC if c != "log_empl"]]:
         if column in frame.columns:
             frame[column] = pd.to_numeric(frame[column], errors="coerce")
     observed = frame[DIGITAL].notna().sum(axis=1)
@@ -532,6 +533,22 @@ def bootstrap_band_rates(target: np.ndarray, assigned: list[str], groups: np.nda
     return out
 
 
+def fielding_report(sample: pd.DataFrame) -> list[dict]:
+    """Share of firm-years in which a candidate item was never asked."""
+    rows = []
+    for column, label in (("coop", "cooperation"), ("dinfo_net", "internet_as_source")):
+        missing = sample[column].isna()
+        rows.append(
+            {
+                "item": label,
+                "share_not_asked": float(missing.mean()),
+                "n_not_asked": int(missing.sum()),
+                "ready_rate_when_not_asked": float(sample.loc[missing, "ready"].mean()) if missing.any() else None,
+            }
+        )
+    return rows
+
+
 def prevalence_table(sample: pd.DataFrame) -> list[dict]:
     rows = []
     for key, _label, _columns in RULES:
@@ -717,6 +734,7 @@ def main() -> None:
         },
         "markers": marker_rows,
         "rules": prevalence_table(sample),
+        "fielding": fielding_report(sample),
         "weight_on_ai": weight,
         "thresholds": {
             "logistic_f1": logistic_threshold,
